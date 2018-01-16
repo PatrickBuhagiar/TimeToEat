@@ -1,12 +1,11 @@
 package com.soar.timetoeat.menu.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 public class Menu implements Serializable {
@@ -15,7 +14,8 @@ public class Menu implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
     private long restaurantId;
-    private List<Section> sections;
+    @OneToMany(cascade = CascadeType.ALL)
+    private Set<Section> sections = new HashSet<>();
 
     private Menu() {
     }
@@ -33,7 +33,7 @@ public class Menu implements Serializable {
         return restaurantId;
     }
 
-    public List<Section> getSections() {
+    public Set<Section> getSections() {
         return sections;
     }
 
@@ -54,7 +54,7 @@ public class Menu implements Serializable {
 
     public static final class MenuBuilder {
         private long restaurantId;
-        private List<Section> sections;
+        private Set<Section> sections = new HashSet<>();
 
         private MenuBuilder() {
         }
@@ -68,8 +68,13 @@ public class Menu implements Serializable {
             return this;
         }
 
-        public MenuBuilder withSections(List<Section> sections) {
+        public MenuBuilder withSections(Set<Section> sections) {
             this.sections = sections;
+            return this;
+        }
+
+        public MenuBuilder addSection(final Section section) {
+            this.sections.add(section);
             return this;
         }
 

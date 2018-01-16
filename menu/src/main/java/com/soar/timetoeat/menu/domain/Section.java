@@ -1,12 +1,10 @@
 package com.soar.timetoeat.menu.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.io.Serializable;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 public class Section implements Serializable {
@@ -15,7 +13,8 @@ public class Section implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
     private String name;
-    private List<Item> items;
+    @OneToMany(cascade = CascadeType.ALL)
+    private Set<Item> items = new HashSet<>();
 
     private Section() {
     }
@@ -33,7 +32,7 @@ public class Section implements Serializable {
         return name;
     }
 
-    public List<Item> getItems() {
+    public Set<Item> getItems() {
         return items;
     }
 
@@ -54,9 +53,10 @@ public class Section implements Serializable {
 
     public static final class SectionBuilder {
         private String name;
-        private List<Item> items;
+        private Set<Item> items;
 
         private SectionBuilder() {
+            items = new HashSet<>();
         }
 
         public static SectionBuilder aSection() {
@@ -68,8 +68,13 @@ public class Section implements Serializable {
             return this;
         }
 
-        public SectionBuilder withItems(List<Item> items) {
+        public SectionBuilder withItems(Set<Item> items) {
             this.items = items;
+            return this;
+        }
+
+        public SectionBuilder addItem(final Item item) {
+            this.items.add(item);
             return this;
         }
 
