@@ -13,12 +13,25 @@ import java.util.Set;
  */
 public class Generator {
 
+    /**
+     * Generate menu parameters
+     *
+     * @param n_items number of menu items
+     * @param n_sections number of sections
+     * @return generated parameters
+     */
     public static CreateMenuParams generateMenuParams(final int n_items, final int n_sections) {
         return CreateMenuParams.CreateMenuParamsBuilder.aCreateMenuParams()
                 .withSections(generateSectionParams(n_items, n_sections))
                 .build();
     }
 
+    /**
+     * Generate section params
+     * @param n_items number of menu items
+     * @param n_sections number of sections
+     * @return generated sections
+     */
     private static Set<CreateSectionParams> generateSectionParams(final int n_items, final int n_sections) {
         final HashSet<CreateSectionParams> sections = new HashSet<>();
         for (int i = 0; i < n_sections; i++) {
@@ -30,6 +43,11 @@ public class Generator {
         return sections;
     }
 
+    /**
+     * Generate menu items
+     * @param n_items number of menu items
+     * @return generated menu items
+     */
     private static Set<CreateItemParams> generateItemParams(final int n_items) {
         final HashSet<CreateItemParams> items = new HashSet<>();
         for (int i = 0; i < n_items; i++) {

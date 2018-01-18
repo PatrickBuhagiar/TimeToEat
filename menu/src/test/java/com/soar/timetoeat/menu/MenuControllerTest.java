@@ -30,7 +30,7 @@ public class MenuControllerTest {
         Bastion.request(JsonRequest
                 .postFromModel("http://localhost:" + port + "/restaurants/" + restaurantId + "/menu",
                         createMenuParams))
-        .withAssertions(JsonResponseAssertions.fromModel(201, convert(createMenuParams, restaurantId)));
+                .withAssertions(JsonResponseAssertions.fromModel(201, convert(createMenuParams, restaurantId)));
     }
 
     @Test
@@ -44,7 +44,7 @@ public class MenuControllerTest {
                 .withAssertions(JsonResponseAssertions.fromModel(201, convert(createMenuParams, restaurantId)));
 
         Bastion.request(GeneralRequest.get("http://localhost:" + port + "/restaurants/" + restaurantId + "/menu"))
-                .withAssertions(JsonResponseAssertions.fromModel(201, convert(createMenuParams, restaurantId)));
+                .withAssertions(JsonResponseAssertions.fromModel(200, convert(createMenuParams, restaurantId)));
 
     }
 }

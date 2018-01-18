@@ -41,7 +41,7 @@ public class MenuController {
      */
     @RequestMapping(value = "restaurants/{restaurantId}/menu", method = POST)
     public @ResponseBody
-    Menu createMenu(@PathVariable final long restaurantId, @RequestBody CreateMenuParams params) {
+    Menu createMenu(@PathVariable final long restaurantId, @RequestBody final CreateMenuParams params) {
         return repository.save(convert(params, restaurantId));
     }
 }

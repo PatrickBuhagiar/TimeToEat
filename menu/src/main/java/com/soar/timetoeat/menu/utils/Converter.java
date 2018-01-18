@@ -21,7 +21,7 @@ public class Converter {
      *
      * @param params       the create menu parameters
      * @param restaurantId the restaurant idValue. Each menu item is linked to one restaurant
-     * @return the converted menu item
+     * @return the converted menu
      */
     public static Menu convert(final CreateMenuParams params, final long restaurantId) {
         return MenuBuilder.aMenu()
