@@ -11,4 +11,5 @@ public interface MenuRepository extends CrudRepository<Menu, Long> {
 
     Menu findByRestaurantId(final long restaurantId);
 
+
 }

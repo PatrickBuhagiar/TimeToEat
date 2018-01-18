@@ -6,6 +6,9 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * The Section class
+ */
 @Entity
 public class Section implements Serializable {
 
