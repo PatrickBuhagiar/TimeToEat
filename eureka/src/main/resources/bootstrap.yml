@@ -1,3 +1,10 @@
 spring:
   application:
     name: eureka-server
+  profiles: default
+server:
+  port: 9411
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8010/eureka/

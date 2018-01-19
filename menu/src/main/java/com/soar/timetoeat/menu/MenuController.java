@@ -26,9 +26,9 @@ public class MenuController {
      * @param restaurantId the restaurant's ID
      * @return the retrieved {@link Menu}
      */
-    @RequestMapping(value = "restaurants/{restaurantId}/menu", method = GET)
+    @GetMapping(value = "restaurants/{restaurantId}/menu")
     public @ResponseBody
-    Menu getMenu(@PathVariable final long restaurantId) {
+    Menu getMenu(@PathVariable("restaurantId") final Long restaurantId) {
         return repository.findByRestaurantId(restaurantId);
     }
 
@@ -39,7 +39,7 @@ public class MenuController {
      * @param params the creation parameters
      * @return the created {@link Menu}
      */
-    @RequestMapping(value = "restaurants/{restaurantId}/menu", method = POST)
+    @PostMapping(value = "restaurants/{restaurantId}/menu")
     public @ResponseBody
     Menu createMenu(@PathVariable final long restaurantId, @RequestBody final CreateMenuParams params) {
         return repository.save(convert(params, restaurantId));

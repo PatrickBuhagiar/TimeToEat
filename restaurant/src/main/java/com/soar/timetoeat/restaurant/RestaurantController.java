@@ -1,8 +1,11 @@
 package com.soar.timetoeat.restaurant;
 
+import com.soar.timetoeat.restaurant.dao.MenuClient;
 import com.soar.timetoeat.restaurant.dao.RestaurantRepository;
 import com.soar.timetoeat.restaurant.domain.CreateRestaurantParams;
+import com.soar.timetoeat.restaurant.domain.Menu;
 import com.soar.timetoeat.restaurant.domain.Restaurant;
+import com.soar.timetoeat.restaurant.domain.RestaurantWithMenu;
 import com.soar.timetoeat.restaurant.utils.Converter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -13,16 +16,21 @@ import java.util.Set;
 public class RestaurantController {
 
     private final RestaurantRepository repository;
+    private final MenuClient menuClient;
 
     @Autowired
-    public RestaurantController(final RestaurantRepository repository) {
+    public RestaurantController(final RestaurantRepository repository,
+                                final MenuClient menuClient) {
         this.repository = repository;
+        this.menuClient = menuClient;
     }
 
     @RequestMapping(value = "restaurants/{restaurantName}", method = RequestMethod.GET)
     public @ResponseBody
-    Restaurant getRestaurant(@PathVariable final String restaurantName) {
-        return repository.findByName(restaurantName);
+    RestaurantWithMenu getRestaurant(@PathVariable final String restaurantName) {
+        final Restaurant restaurant = repository.findByName(restaurantName);
+        final Menu menu = menuClient.getMenu(restaurant.getId());
+        return RestaurantWithMenu.buildFrom(restaurant, menu);
     }
 
     @RequestMapping(value = "restaurants", method = RequestMethod.POST)
