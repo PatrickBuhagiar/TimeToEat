@@ -2,13 +2,15 @@ package com.soar.timetoeat.restaurant.domain;
 
 import com.soar.timetoeat.restaurant.dao.MenuClient;
 
+import java.io.Serializable;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * This is a simplified version of Menu without the IDs that will be
  * populated in the Feign client {@link MenuClient}.
  */
-public class Menu {
+public class Menu implements Serializable {
 
     private Set<Section> sections;
 
@@ -23,53 +25,17 @@ public class Menu {
         return sections;
     }
 
-    private class Section {
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Menu)) return false;
+        final Menu menu = (Menu) o;
+        return Objects.equals(getSections(), menu.getSections());
+    }
 
-        private String name;
-        private Set<Item> items;
+    @Override
+    public int hashCode() {
 
-        public Section() {
-        }
-
-        public Section(final String name, final Set<Item> items) {
-            this.name = name;
-            this.items = items;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public Set<Item> getItems() {
-            return items;
-        }
-
-        private class Item {
-
-            private String name;
-            private String description;
-            private double unitPrice;
-
-            public Item() {
-            }
-
-            public Item(final String name, final String description, final double unitPrice) {
-                this.name = name;
-                this.description = description;
-                this.unitPrice = unitPrice;
-            }
-
-            public String getName() {
-                return name;
-            }
-
-            public String getDescription() {
-                return description;
-            }
-
-            public double getUnitPrice() {
-                return unitPrice;
-            }
-        }
+        return Objects.hash(getSections());
     }
 }
