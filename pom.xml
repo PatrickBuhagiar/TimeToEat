@@ -35,5 +35,6 @@
         <module>menu</module>
         <module>eureka</module>
         <module>restaurant</module>
+        <module>order</module>
     </modules>
 </project>

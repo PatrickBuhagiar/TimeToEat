@@ -19,6 +19,15 @@ public class Unique {
 
     public static Double doubleValue(final double max) {
         Random r = new Random();
-        return 0 + (max - 0) * r.nextDouble();
+        return max * r.nextDouble();
+    }
+
+    public static int intValue() {
+        return intValue(100);
+    }
+
+    public static int intValue(final int max) {
+        Random r = new Random();
+        return max * r.nextInt();
     }
 }
