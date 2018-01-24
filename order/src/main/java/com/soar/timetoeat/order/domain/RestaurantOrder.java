@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
-public class Order implements Serializable {
+public class RestaurantOrder implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -22,10 +22,10 @@ public class Order implements Serializable {
     //TODO add user id
 
 
-    private Order() {
+    private RestaurantOrder() {
     }
 
-    private Order(final OrderBuilder builder) {
+    private RestaurantOrder(final OrderBuilder builder) {
         this.items = builder.items;
         this.restaurantId = builder.restaurantId;
         this.state = builder.state;
@@ -72,8 +72,8 @@ public class Order implements Serializable {
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
-        if (!(o instanceof Order)) return false;
-        final Order order = (Order) o;
+        if (!(o instanceof RestaurantOrder)) return false;
+        final RestaurantOrder order = (RestaurantOrder) o;
         return getId() == order.getId() &&
                 getRestaurantId() == order.getRestaurantId() &&
                 Double.compare(order.getTotalPrice(), getTotalPrice()) == 0 &&
@@ -127,8 +127,8 @@ public class Order implements Serializable {
             return this;
         }
 
-        public Order build() {
-            return new Order(this);
+        public RestaurantOrder build() {
+            return new RestaurantOrder(this);
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.soar.timetoeat.order.utils;
 
-import com.soar.timetoeat.order.domain.Order;
+import com.soar.timetoeat.order.domain.RestaurantOrder;
 import com.soar.timetoeat.order.domain.OrderItem;
 import com.soar.timetoeat.order.domain.params.CreateOrderItemParams;
 import com.soar.timetoeat.order.domain.params.CreateOrderParams;
@@ -13,12 +13,12 @@ import java.util.stream.Collectors;
 public class Converter {
 
     /**
-     * Convert from {@link CreateOrderParams} to {@link Order}
+     * Convert from {@link CreateOrderParams} to {@link RestaurantOrder}
      * @param params the create order params
-     * @return the converted Order
+     * @return the converted RestaurantOrder
      */
-    public static Order convert(final long restaurantId, final CreateOrderParams params) {
-        return Order.OrderBuilder.anOrder()
+    public static RestaurantOrder convert(final long restaurantId, final CreateOrderParams params) {
+        return RestaurantOrder.OrderBuilder.anOrder()
                 .withDeliveryAddress(params.getDeliveryAddress())
                 .withRestaurantId(restaurantId)
                 .withItems(params.getItems()
