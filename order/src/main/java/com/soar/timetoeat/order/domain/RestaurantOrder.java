@@ -69,6 +69,14 @@ public class RestaurantOrder implements Serializable {
         return items;
     }
 
+    public void setState(final OrderState state) {
+        this.state = state;
+    }
+
+    public void setExpectedDeliveryTime(final Long expectedDeliveryTime) {
+        this.expectedDeliveryTime = expectedDeliveryTime;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;

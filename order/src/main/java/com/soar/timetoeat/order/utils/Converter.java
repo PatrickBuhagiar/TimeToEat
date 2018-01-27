@@ -1,5 +1,6 @@
 package com.soar.timetoeat.order.utils;
 
+import com.soar.timetoeat.order.domain.OrderState;
 import com.soar.timetoeat.order.domain.RestaurantOrder;
 import com.soar.timetoeat.order.domain.OrderItem;
 import com.soar.timetoeat.order.domain.params.CreateOrderItemParams;
@@ -21,6 +22,7 @@ public class Converter {
         return RestaurantOrder.OrderBuilder.anOrder()
                 .withDeliveryAddress(params.getDeliveryAddress())
                 .withRestaurantId(restaurantId)
+                .withState(OrderState.W)
                 .withItems(params.getItems()
                         .stream()
                         .map(Converter::convert)
