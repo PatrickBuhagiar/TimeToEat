@@ -1,0 +1,13 @@
+zuul:
+  prefix: /api
+  routes:
+    menu-service:
+      serviceId: menu-service
+    order-service:
+      serviceId: order-service
+    restaurant-service:
+      serviceId: restaurant-service
+spring:
+  application:
+    name: gateway-service
+

@@ -1,6 +1,7 @@
 package com.soar.timetoeat.restaurant;
 
 import com.soar.timetoeat.restaurant.domain.CreateRestaurantParams;
+import com.soar.timetoeat.restaurant.utils.Generator;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.context.embedded.LocalServerPort;
@@ -9,7 +10,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import rocks.bastion.Bastion;
 import rocks.bastion.core.json.JsonRequest;
 import rocks.bastion.core.json.JsonResponseAssertions;
-import com.soar.timetoeat.restaurant.utils.Generator;
 
 import static com.soar.timetoeat.restaurant.utils.Converter.convert;
 
@@ -27,7 +27,7 @@ public class RestaurantControllerTest {
         Bastion.request(JsonRequest
                 .postFromModel("http://localhost:" + port + "/restaurants",
                         params))
-                .withAssertions(JsonResponseAssertions.fromModel(201, convert(params)));
+                .withAssertions(JsonResponseAssertions.fromModel(200, convert(params)));
 
     }
 

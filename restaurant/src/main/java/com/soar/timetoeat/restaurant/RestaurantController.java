@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+
 @RestController
 public class RestaurantController {
 
@@ -25,7 +28,7 @@ public class RestaurantController {
         this.menuClient = menuClient;
     }
 
-    @RequestMapping(value = "restaurants/{restaurantName}", method = RequestMethod.GET)
+    @RequestMapping(value = "restaurants/{restaurantName}", method = GET)
     public @ResponseBody
     RestaurantWithMenu getRestaurant(@PathVariable final String restaurantName) {
         final Restaurant restaurant = repository.findByName(restaurantName);
@@ -33,13 +36,13 @@ public class RestaurantController {
         return RestaurantWithMenu.buildFrom(restaurant, menu);
     }
 
-    @RequestMapping(value = "restaurants", method = RequestMethod.POST)
+    @RequestMapping(value = "restaurants", method = POST)
     public @ResponseBody
     Restaurant createRestaurant(@RequestBody final CreateRestaurantParams params) {
         return repository.save(Converter.convert(params));
     }
 
-    @RequestMapping(value = "restaurants", method = RequestMethod.GET)
+    @RequestMapping(value = "restaurants", method = GET)
     public @ResponseBody
     Set<Restaurant> getAllRestaurants() {
         return repository.findAll();

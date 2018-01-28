@@ -33,7 +33,7 @@ public class OrderControllerTest {
         Bastion.request(JsonRequest
                 .postFromModel("http://localhost:" + port + "/orders" + restaurantId + "/checkout",
                         createOrderParams))
-                .withAssertions(JsonResponseAssertions.fromModel(201, convert(restaurantId, createOrderParams)));
+                .withAssertions(JsonResponseAssertions.fromModel(200, convert(restaurantId, createOrderParams)));
     }
 
     @Test
@@ -45,12 +45,12 @@ public class OrderControllerTest {
         Bastion.request(JsonRequest
                 .postFromModel("http://localhost:" + port + "/orders/" + restaurantId + "/checkout",
                         createOrderParams))
-                .withAssertions(JsonResponseAssertions.fromModel(201, convert(restaurantId, createOrderParams)));
+                .withAssertions(JsonResponseAssertions.fromModel(200, convert(restaurantId, createOrderParams)));
 
         Bastion.request(JsonRequest
                 .postFromModel("http://localhost:" + port + "/orders/" + restaurantId + "/checkout",
                         createOrderParams))
-                .withAssertions(JsonResponseAssertions.fromModel(201, convert(restaurantId, createOrder2Params)));
+                .withAssertions(JsonResponseAssertions.fromModel(200, convert(restaurantId, createOrder2Params)));
 
         Bastion.request(GeneralRequest
                 .get("http://localhost:" + port + "/orders/" + restaurantId))

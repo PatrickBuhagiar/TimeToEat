@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import static com.soar.timetoeat.order.utils.Converter.convert;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @RestController
 public class OrderController {
@@ -21,20 +23,20 @@ public class OrderController {
         this.repository = repository;
     }
 
-    @PostMapping(value = "restaurants/{restaurantId}/checkout")
+    @RequestMapping(value = "restaurants/{restaurantId}/checkout", method = RequestMethod.POST)
     public @ResponseBody
     RestaurantOrder createOrder(@PathVariable("restaurantId") final Long restaurantId,
                                 @RequestBody final CreateOrderParams params) {
         return repository.save(convert(restaurantId, params));
     }
 
-    @GetMapping(value = "restaurants/{restaurantId}")
+    @RequestMapping(value = "restaurants/{restaurantId}", method = GET)
     public @ResponseBody
     List<RestaurantOrder> getRestaurantOrders(@PathVariable("restaurantId") final Long restaurantId) {
         return repository.findByRestaurantId(restaurantId);
     }
 
-    @PostMapping(value = "orders/{orderId}")
+    @RequestMapping(value = "orders/{orderId}", method = POST)
     public @ResponseBody
     RestaurantOrder updateOrder(@PathVariable("orderId") final Long orderId,
                                 @RequestBody final UpdateOrderParams params) {

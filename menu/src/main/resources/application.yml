@@ -3,6 +3,20 @@ spring:
 server:
   port: 3002 #${PORT:${SERVER_PORT:0}}   # Select any available port if neither port nor server port are specified.
 eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
   client:
     serviceUrl:
       defaultZone: http://localhost:8010/eureka/
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5
+ribbon:
+  ConnectTimeout: 10001
+  ReadTimeout: 60001
+  maxAutoRetriesNextServer: 2
+  maxAutoRetries: 1
+  eager-load:
+    enabled: true
