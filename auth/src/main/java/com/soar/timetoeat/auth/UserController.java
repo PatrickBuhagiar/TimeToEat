@@ -1,28 +1,39 @@
 package com.soar.timetoeat.auth;
 
-import com.soar.timetoeat.auth.dao.UserRepository;
+import com.soar.timetoeat.auth.dao.ApplicationUserRepository;
 import com.soar.timetoeat.auth.domain.CreateUserParams;
 import com.soar.timetoeat.auth.domain.User;
-import com.soar.timetoeat.auth.domain.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import static com.soar.timetoeat.auth.utils.Converter.convert;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
-@RestController(value = "users/")
+@RestController
 public class UserController {
 
-    private UserRepository userRepository;
+    private ApplicationUserRepository applicationUserRepository;
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Autowired
-    public UserController(final UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserController(final ApplicationUserRepository applicationUserRepository,
+                          final BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.applicationUserRepository = applicationUserRepository;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
-    @RequestMapping(name = "restaurant", method = POST)
+    @RequestMapping(name = "users/register", method = POST)
     public @ResponseBody
-    User createRestaurantUser(@RequestBody final CreateUserParams params) {
-        return userRepository.save(convert(params));
+    User registerUser(@RequestBody final CreateUserParams params) {
+        final User newUser = User.UserBuilder.aUser()
+                .withRole(params.getRole())
+                .withEmail(params.getEmail())
+                .withUsername(params.getUsername())
+                .withPassword(bCryptPasswordEncoder.encode(params.getPassword()))
+                .build();
+        return applicationUserRepository.save(newUser);
     }
 }

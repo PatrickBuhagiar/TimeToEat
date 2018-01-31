@@ -22,7 +22,6 @@ public class User implements Serializable {
     }
 
     public User(final UserBuilder builder) {
-        this.id = builder.id;
         this.username = builder.username;
         this.password = builder.password;
         this.email = builder.email;
@@ -67,7 +66,6 @@ public class User implements Serializable {
     }
 
     public static final class UserBuilder {
-        private long id;
         private String username;
         private String password;
         private String email;
@@ -78,11 +76,6 @@ public class User implements Serializable {
 
         public static UserBuilder aUser() {
             return new UserBuilder();
-        }
-
-        public UserBuilder withId(long id) {
-            this.id = id;
-            return this;
         }
 
         public UserBuilder withUsername(String username) {

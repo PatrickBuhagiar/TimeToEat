@@ -11,7 +11,7 @@ import com.soar.timetoeat.auth.domain.UserRole;
 public class Converter {
 
     /**
-     * COnvert from {@link CreateUserParams} to {@link User}
+     * Convert from {@link CreateUserParams} to {@link User}
      *
      * @param params the creation params
      * @return the created user
