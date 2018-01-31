@@ -4,10 +4,11 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
-public class User {
+public class User implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -17,16 +18,15 @@ public class User {
     private String email;
     private UserRole role;
 
-    public User(final long id,
-                final String username,
-                final String password,
-                final String email,
-                final UserRole role) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.email = email;
-        this.role = role;
+    public User() {
+    }
+
+    public User(final UserBuilder builder) {
+        this.id = builder.id;
+        this.username = builder.username;
+        this.password = builder.password;
+        this.email = builder.email;
+        this.role = builder.role;
     }
 
     public long getId() {
@@ -76,7 +76,7 @@ public class User {
         private UserBuilder() {
         }
 
-        public static UserBuilder anUser() {
+        public static UserBuilder aUser() {
             return new UserBuilder();
         }
 
@@ -106,7 +106,7 @@ public class User {
         }
 
         public User build() {
-            return new User(id, username, password, email, role);
+            return new User(this);
         }
     }
 }
