@@ -1,5 +1,7 @@
 package com.soar.timetoeat.auth.domain;
 
+import com.soar.timetoeat.util.domain.UserRole;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;

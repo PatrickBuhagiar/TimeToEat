@@ -1,4 +1,4 @@
-package com.soar.timetoeat.auth.domain;
+package com.soar.timetoeat.util.domain;
 
 public enum UserRole {
     RESTAURANT, CLIENT, ADMIN

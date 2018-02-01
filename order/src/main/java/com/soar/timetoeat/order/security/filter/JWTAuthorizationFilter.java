@@ -1,4 +1,4 @@
-package com.soar.timetoeat.auth.security.filter;
+package com.soar.timetoeat.order.security.filter;
 
 import io.jsonwebtoken.Jwts;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,9 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static com.soar.timetoeat.util.SecurityConstants.HEADER_STRING;
-import static com.soar.timetoeat.util.SecurityConstants.TOKEN_PREFIX;
-import static com.soar.timetoeat.util.SecurityConstants.SECRET;
+import static com.soar.timetoeat.util.SecurityConstants.*;
 
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 

@@ -1,7 +1,7 @@
-package com.soar.timetoeat.auth.security.filter;
+package com.soar.timetoeat.order.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.soar.timetoeat.auth.domain.User;
+import com.soar.timetoeat.util.domain.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,7 +31,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     public Authentication attemptAuthentication(HttpServletRequest req,
                                                 HttpServletResponse res) throws AuthenticationException {
         try {
-            User creds = new ObjectMapper().readValue(req.getInputStream(), com.soar.timetoeat.auth.domain.User.class);
+            User creds = new ObjectMapper().readValue(req.getInputStream(), User.class);
 
             return authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(

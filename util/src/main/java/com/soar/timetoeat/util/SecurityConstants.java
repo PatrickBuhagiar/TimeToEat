@@ -1,4 +1,4 @@
-package com.soar.timetoeat.auth.security;
+package com.soar.timetoeat.util;
 
 public class SecurityConstants {
     public static final String SECRET = "SecretKeyToGenJWTs";

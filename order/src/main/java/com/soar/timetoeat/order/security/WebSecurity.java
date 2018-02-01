@@ -1,7 +1,7 @@
-package com.soar.timetoeat.auth.security;
+package com.soar.timetoeat.order.security;
 
-import com.soar.timetoeat.auth.security.filter.JWTAuthenticationFilter;
-import com.soar.timetoeat.auth.security.filter.JWTAuthorizationFilter;
+import com.soar.timetoeat.order.security.filter.JWTAuthenticationFilter;
+import com.soar.timetoeat.order.security.filter.JWTAuthorizationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;

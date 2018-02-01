@@ -1,5 +1,7 @@
 package com.soar.timetoeat.auth.domain;
 
+import com.soar.timetoeat.util.domain.UserRole;
+
 import java.io.Serializable;
 import java.util.Objects;
 
