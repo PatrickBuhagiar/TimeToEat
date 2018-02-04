@@ -46,5 +46,9 @@ public class OrderController {
         return repository.save(order);
     }
 
-
+    @RequestMapping(value = "orders/{orderId}", method = GET)
+    public @ResponseBody
+    RestaurantOrder getOrder(@PathVariable("orderId") final Long orderId) {
+        return repository.findOne(orderId);
+    }
 }
