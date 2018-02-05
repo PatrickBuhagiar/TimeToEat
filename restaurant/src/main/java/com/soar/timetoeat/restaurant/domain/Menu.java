@@ -8,7 +8,7 @@ import java.util.Set;
 
 /**
  * This is a simplified version of Menu without the IDs that will be
- * populated in the Feign client {@link MenuClient}.
+ * populated in the Feign dao {@link MenuClient}.
  */
 public class Menu implements Serializable {
 

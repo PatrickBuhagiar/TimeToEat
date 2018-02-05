@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * Server. The application name is defined in the applications.yml file of the
  * Menu service.
  */
-@FeignClient(name = "menu", url = "http://localhost:3002")
+@FeignClient(name = "menu-service", url = "http://localhost:3002")
 public interface MenuClient {
 
     @RequestMapping(value = "/restaurants/{restaurantId}/menu", method = RequestMethod.GET, consumes = "application/json")
