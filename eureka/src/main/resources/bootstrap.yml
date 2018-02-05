@@ -1,0 +1,19 @@
+spring:
+  profiles: default
+  application:
+    name: eureka-server
+server:
+  port: 8010
+eureka:
+  instance:
+    hostname: eurekahost
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+    server:
+      waitTimeInMsWhenSyncEmpty: 0
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+ribbon:
+  ConnectTimeout: 3001
+  ReadTimeout: 60001

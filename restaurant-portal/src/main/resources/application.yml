@@ -3,3 +3,21 @@ spring:
       name: restaurant-portal
 server:
   port: 3010
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8010/eureka/
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5
+ribbon:
+  ConnectTimeout: 10001
+  ReadTimeout: 60001
+  maxAutoRetriesNextServer: 2
+  maxAutoRetries: 1
+  eager-load:
+    enabled: true

@@ -2,28 +2,47 @@ package com.soar.timetoeat.restaurant.portal;
 
 import com.soar.timetoeat.restaurant.portal.dao.AuthServiceClient;
 import com.soar.timetoeat.restaurant.portal.domain.LoginRequest;
+import com.soar.timetoeat.util.domain.UserRole;
+import com.soar.timetoeat.util.params.CreateUserParams;
+import com.soar.timetoeat.util.params.CreateUserParams.CreateUserParamsBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Arrays;
+import java.awt.event.*;
+import java.util.List;
 
 @SpringBootApplication
 @EnableFeignClients
-public class RestaurantPortal extends JFrame implements ActionListener {
-
-    private static String token = null;
+@EnableEurekaClient
+@EnableDiscoveryClient
+public class RestaurantPortal extends JPanel implements ActionListener {
 
     private final AuthServiceClient authServiceClient;
-    private JTextField userText;
-    private JPasswordField passwordText;
+
+    private static int frameWidth = 1000;
+    private static int frameHeight = 600;
+    private static List<String> token = null;
+
+
+    private JTabbedPane tabbedPane;
+
+    //Login fields
+    private JTextField login_usernameText;
+    private JPasswordField login_passwordText;
+    //register fields
+    private JTextField register_emailText;
+    private JTextField register_usernameText;
+    private JPasswordField register_passwordText;
+
 
     @Autowired
     public RestaurantPortal(final AuthServiceClient authServiceClient) {
@@ -36,53 +55,147 @@ public class RestaurantPortal extends JFrame implements ActionListener {
                 .headless(false).run(args);
 
         EventQueue.invokeLater(() -> {
+            JFrame frame = new JFrame("Restaurant Portal");
             RestaurantPortal ex = ctx.getBean(RestaurantPortal.class);
-            ex.setVisible(true);
+            frame.getContentPane().add(ex, BorderLayout.CENTER);
+            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            frame.setSize(frameWidth,frameHeight);
+            frame.setVisible(true);
         });
     }
 
     private void initWindow() {
-        setSize(300, 180);
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        tabbedPane = new JTabbedPane();
 
-        JPanel panel = new JPanel();
-        add(panel);
-        placeComponents(panel);
+        //login
+        JPanel loginPanel = new JPanel();
+        placeLoginComponents(loginPanel);
+        tabbedPane.addTab("Login", loginPanel);
+        tabbedPane.setSelectedIndex(0);
+
+        //register
+        JPanel registerPanel = new JPanel();
+        placeRegisterComponents(registerPanel);
+        tabbedPane.addTab("Register", registerPanel);
+
+        //home
+        JPanel homePanel = new JPanel();
+        tabbedPane.addTab("Home", homePanel);
+        //initially, home won't be accessible
+        tabbedPane.setEnabledAt(2, false);
+
+        //Add tabbed pane to panel
+        setLayout(new GridLayout(1,1));
+        add(tabbedPane);
     }
 
-    private void placeComponents(JPanel panel) {
+    private void placeLoginComponents(final JPanel panel) {
 
         panel.setLayout(null);
 
-        JLabel userLabel = new JLabel("User");
-        userLabel.setBounds(10, 10, 80, 25);
+        JLabel userLabel = new JLabel("Username");
+        userLabel.setBounds(100 + (frameWidth >> 2), 10 + (frameHeight >> 2), 80, 25);
         panel.add(userLabel);
 
-        userText = new JTextField(20);
-        userText.setBounds(100, 10, 160, 25);
-        panel.add(userText);
+        login_usernameText = new JTextField(30);
+        login_usernameText.setBounds(190 + (frameWidth >> 2), 10 + (frameHeight >> 2), 160, 25);
+        panel.add(login_usernameText);
 
         JLabel passwordLabel = new JLabel("Password");
-        passwordLabel.setBounds(10, 40, 80, 25);
+        passwordLabel.setBounds(100 + (frameWidth >> 2), 40 + (frameHeight >> 2), 80, 25);
         panel.add(passwordLabel);
 
-        passwordText = new JPasswordField(20);
-        passwordText.setBounds(100, 40, 160, 25);
-        panel.add(passwordText);
+        login_passwordText = new JPasswordField(30);
+        login_passwordText.setBounds(190 + (frameWidth >> 2), 40 + (frameHeight >> 2), 160, 25);
+        panel.add(login_passwordText);
 
         JButton loginButton = new JButton("login");
-        loginButton.setBounds(10, 80, 80, 25);
+        loginButton.setBounds(270 + (frameWidth >> 2), 80 + (frameHeight >> 2), 80, 25);
         loginButton.addActionListener(this);
         panel.add(loginButton);
 
+
+    }
+
+    private void placeRegisterComponents(final JPanel panel) {
+        panel.setLayout(null);
+
+        JLabel userLabel = new JLabel("Username");
+        userLabel.setBounds(100 + (frameWidth >> 2), 10 + (frameHeight >> 2), 80, 25);
+        panel.add(userLabel);
+
+        register_usernameText = new JTextField(30);
+        register_usernameText.setBounds(190 + (frameWidth >> 2), 10 + (frameHeight >> 2), 160, 25);
+        panel.add(register_usernameText);
+
+        JLabel emailLabel = new JLabel("Email");
+        emailLabel.setBounds(100 + (frameWidth >> 2), 40 + (frameHeight >> 2), 80, 25);
+        panel.add(emailLabel);
+
+        register_emailText = new JTextField(30);
+        register_emailText.setBounds(190 + (frameWidth >> 2), 40 + (frameHeight >> 2), 160, 25);
+        panel.add(register_emailText);
+
+        JLabel passwordLabel = new JLabel("Password");
+        passwordLabel.setBounds(100 + (frameWidth >> 2), 70 + (frameHeight >> 2), 80, 25);
+        panel.add(passwordLabel);
+
+        register_passwordText = new JPasswordField(30);
+        register_passwordText.setBounds(190 + (frameWidth >> 2), 70 + (frameHeight >> 2), 160, 25);
+        panel.add(register_passwordText);
+
         JButton registerButton = new JButton("register");
-        registerButton.setBounds(180, 80, 80, 25);
+        registerButton.setBounds(270 + (frameWidth >> 2), 110 + (frameHeight >> 2), 80, 25);
+        registerButton.addActionListener(this);
         panel.add(registerButton);
     }
 
     @Override
     public void actionPerformed(final ActionEvent e) {
-        final ResponseEntity<Void> login = authServiceClient.login(new LoginRequest(userText.getText(), Arrays.toString(passwordText.getPassword())));
-        System.out.println(login.getHeaders().get("Authorization"));
+        switch (e.getActionCommand()) {
+            case "login":
+                final ResponseEntity<Void> loginResponse = authServiceClient.login(new LoginRequest(login_usernameText.getText(), new String(login_passwordText.getPassword())));
+                if (loginResponse.getStatusCode() == HttpStatus.OK) {
+                    //store token locally for future http calls
+                    token = loginResponse.getHeaders().get("Authorization");
+
+                    //clear fields
+                    login_usernameText.setText("");
+                    login_passwordText.setText("");
+
+                    //change tab states
+                    tabbedPane.setEnabledAt(0, false);
+                    tabbedPane.setEnabledAt(1, false);
+                    tabbedPane.setEnabledAt(2, true);
+
+                    //switch to home tab
+                    tabbedPane.setSelectedIndex(2);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Wrong Username and Password");
+                }
+                break;
+            case "register":
+                final ResponseEntity<Void> newUser = authServiceClient.register(CreateUserParamsBuilder.aCreateUserParams()
+                        .withEmail(register_emailText.getText())
+                        .withPassword(new String(register_passwordText.getPassword()))
+                        .withUsername(register_usernameText.getText())
+                        .withRole(UserRole.RESTAURANT)
+                        .build());
+                if (newUser.getStatusCode() == HttpStatus.OK) {
+                    //clear fields
+                    register_emailText.setText("");
+                    register_passwordText.setText("");
+                    register_usernameText.setText("");
+
+                    //navigate to login
+                    tabbedPane.setSelectedIndex(0);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Oops, Something went wrong!");
+                }
+                break;
+            default:
+                JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
+                break;
+        }
     }
 }

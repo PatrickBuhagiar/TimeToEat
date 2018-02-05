@@ -31,6 +31,7 @@
     <description>A food ordering and delivery management system</description>
 
     <modules>
+		<module>eureka</module>
         <module>util</module>
         <module>menu</module>
         <module>restaurant</module>
