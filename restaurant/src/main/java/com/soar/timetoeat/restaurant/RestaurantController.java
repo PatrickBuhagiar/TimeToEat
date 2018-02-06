@@ -2,7 +2,7 @@ package com.soar.timetoeat.restaurant;
 
 import com.soar.timetoeat.restaurant.dao.MenuClient;
 import com.soar.timetoeat.restaurant.dao.RestaurantRepository;
-import com.soar.timetoeat.restaurant.domain.CreateRestaurantParams;
+import com.soar.timetoeat.util.params.CreateRestaurantParams;
 import com.soar.timetoeat.restaurant.domain.Menu;
 import com.soar.timetoeat.restaurant.domain.Restaurant;
 import com.soar.timetoeat.restaurant.domain.RestaurantWithMenu;

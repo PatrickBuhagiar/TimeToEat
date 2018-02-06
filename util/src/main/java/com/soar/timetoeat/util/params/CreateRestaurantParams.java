@@ -1,9 +1,9 @@
-package com.soar.timetoeat.restaurant.domain;
+package com.soar.timetoeat.util.params;
 
 import java.util.Objects;
 
 /**
- * Parameters for creating a {@link Restaurant}
+ * Parameters for creating a Restaurant
  */
 public class CreateRestaurantParams {
     private String name;

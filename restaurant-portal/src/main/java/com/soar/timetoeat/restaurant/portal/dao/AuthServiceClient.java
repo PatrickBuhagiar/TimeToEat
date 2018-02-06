@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
-@FeignClient(name = "auth-service", url = "http://localhost:3004")
+@FeignClient("AUTH-SERVICE")
 public interface AuthServiceClient {
 
-    @RequestMapping(value = "/login", method = POST)
+    @RequestMapping(value = "login", method = POST)
     public ResponseEntity<Void> login(@RequestBody final LoginRequest loginRequest);
 
-    @RequestMapping(value = "/users/register", method = POST)
+    @RequestMapping(value = "users/register", method = POST)
     public ResponseEntity<Void> register(@RequestBody final CreateUserParams loginRequest);
 }

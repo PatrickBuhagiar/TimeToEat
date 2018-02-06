@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
  *    approach and only requires this interfaces with the calls it actually
  *    needs. The beauty of feign is that the implementation for making this
  *    API call is implemented on runtime.
- *
- * The "MENU" is the name of the menu service as it is registered in the Eureka
- * Server. The application name is defined in the applications.yml file of the
- * Menu service.
+ * 3) Integrates well with Service discovery. MENU-SERVICE is the service name
+ *    of the menu service, as it is registered on the eureka server. This is
+ *    translated to the actual IP address and port number at runtime. No need
+ *    to remember port numbers :) 
  */
-@FeignClient(name = "menu-service", url = "http://localhost:3002")
+@FeignClient("MENU-SERVICE")
 public interface MenuClient {
 
     @RequestMapping(value = "/restaurants/{restaurantId}/menu", method = RequestMethod.GET, consumes = "application/json")

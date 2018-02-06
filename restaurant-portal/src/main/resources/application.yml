@@ -2,14 +2,15 @@ spring:
   application:
       name: restaurant-portal
 server:
-  port: 3010
+  port: 0
 eureka:
   instance:
     leaseRenewalIntervalInSeconds: 1
     leaseExpirationDurationInSeconds: 2
+    preferIpAddress: true
   client:
     serviceUrl:
-      defaultZone: http://localhost:8010/eureka/
+      defaultZone: http://localhost:8000/eureka/
     healthcheck:
       enabled: true
     lease:

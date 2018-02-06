@@ -1,6 +1,6 @@
 package com.soar.timetoeat.restaurant.utils;
 
-import com.soar.timetoeat.restaurant.domain.CreateRestaurantParams;
+import com.soar.timetoeat.util.params.CreateRestaurantParams;
 import com.soar.timetoeat.restaurant.domain.Restaurant;
 
 /**
