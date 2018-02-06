@@ -3,6 +3,7 @@ package com.soar.timetoeat.restaurant.portal;
 import com.soar.timetoeat.restaurant.portal.dao.AuthClient;
 import com.soar.timetoeat.restaurant.portal.dao.RestaurantClient;
 import com.soar.timetoeat.restaurant.portal.domain.LoginRequest;
+import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
 import com.soar.timetoeat.util.domain.auth.UserRole;
 import com.soar.timetoeat.util.params.CreateUserParams.CreateUserParamsBuilder;
@@ -17,15 +18,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Objects;
 
 @SpringBootApplication
 @EnableFeignClients
 @EnableEurekaClient
 @EnableDiscoveryClient
-public class RestaurantPortal extends JPanel implements ActionListener {
+public class RestaurantPortal extends JPanel implements ActionListener, ChangeListener {
 
+    private static JFrame frame;
     private final AuthClient authClient;
     private final RestaurantClient restaurantClient;
 
@@ -33,6 +38,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     private static int frameHeight = 600;
     private static String token = null;
     private static Restaurant currentRestaurant;
+    private static Menu currentMenu;
 
     private JTabbedPane tabbedPane;
 
@@ -44,6 +50,12 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     private JTextField register_emailText;
     private JTextField register_usernameText;
     private JPasswordField register_passwordText;
+
+    //restaurant fields
+    private JPanel homePanel;
+    private JTextField restaurant_nameText;
+    private JTextField restaurant_addressText;
+    private JButton createRestaurantButton;
 
 
     @Autowired
@@ -59,11 +71,11 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                 .headless(false).run(args);
 
         EventQueue.invokeLater(() -> {
-            JFrame frame = new JFrame("Restaurant Portal");
+            frame = new JFrame("Restaurant Portal");
             RestaurantPortal ex = ctx.getBean(RestaurantPortal.class);
             frame.getContentPane().add(ex, BorderLayout.CENTER);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-            frame.setSize(frameWidth,frameHeight);
+            frame.setSize(frameWidth, frameHeight);
             frame.setVisible(true);
         });
     }
@@ -83,13 +95,14 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         tabbedPane.addTab("Register", registerPanel);
 
         //home
-        JPanel homePanel = new JPanel();
+        homePanel = new JPanel();
+        placeRestaurantComponents(homePanel);
         tabbedPane.addTab("Home", homePanel);
         //initially, home won't be accessible
         tabbedPane.setEnabledAt(2, false);
 
         //Add tabbed pane to panel
-        setLayout(new GridLayout(1,1));
+        setLayout(new GridLayout(1, 1));
         add(tabbedPane);
     }
 
@@ -154,6 +167,43 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         panel.add(registerButton);
     }
 
+    private void placeRestaurantComponents(final JPanel panel) {
+        panel.setLayout(null);
+
+        JLabel nameLabel = new JLabel("Restaurant");
+        nameLabel.setBounds(100 + (frameWidth >> 2), 10 + (frameHeight >> 2), 80, 25);
+        panel.add(nameLabel);
+
+        restaurant_nameText = new JTextField(30);
+        restaurant_nameText.setBounds(190 + (frameWidth >> 2), 10 + (frameHeight >> 2), 160, 25);
+        panel.add(restaurant_nameText);
+
+        JLabel addressLabel = new JLabel("Address");
+        addressLabel.setBounds(100 + (frameWidth >> 2), 40 + (frameHeight >> 2), 80, 25);
+        panel.add(addressLabel);
+
+        restaurant_addressText = new JTextField(30);
+        restaurant_addressText.setBounds(190 + (frameWidth >> 2), 40 + (frameHeight >> 2), 160, 25);
+        panel.add(restaurant_addressText);
+
+        updateRestaurantFields(panel);
+    }
+
+    private void updateRestaurantFields(final JPanel panel) {
+        if (Objects.isNull(currentRestaurant)) {
+            createRestaurantButton = new JButton("create restaurant");
+            createRestaurantButton.setBounds(270 + (frameWidth >> 2), 80 + (frameHeight >> 2), 80, 25);
+            createRestaurantButton.addActionListener(this);
+            panel.add(createRestaurantButton);
+        } else {
+            restaurant_nameText.setText(currentRestaurant.getName());
+            restaurant_nameText.setEditable(false);
+            restaurant_addressText.setText(currentRestaurant.getAddress());
+            restaurant_addressText.setEditable(false);
+            panel.remove(createRestaurantButton);
+        }
+    }
+
     @Override
     public void actionPerformed(final ActionEvent e) {
         switch (e.getActionCommand()) {
@@ -163,11 +213,16 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             case "register":
                 register();
                 break;
+            case "create restaurant":
+                createRestaurant();
             default:
                 JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
                 break;
         }
+        frame.validate();
     }
+
+
 
     /**
      * Perform a login
@@ -178,24 +233,20 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             //store token locally for future http calls
             token = loginResponse.getHeaders().get("Authorization").get(0);
             //get Restaurant
-            final ResponseEntity<Restaurant> restaurantByOwner = restaurantClient.getRestaurantByOwner(token);
-            if (restaurantByOwner.getStatusCode() == HttpStatus.OK) {
-                currentRestaurant = restaurantByOwner.getBody();
-            }
+            currentRestaurant = restaurantClient.getRestaurantByOwner(token);
+            updateRestaurantFields(homePanel);
 
-            if (restaurantByOwner.getStatusCode() != HttpStatus.UNAUTHORIZED) {
-                //clear fields
-                login_usernameText.setText("");
-                login_passwordText.setText("");
+            //clear fields
+            login_usernameText.setText("");
+            login_passwordText.setText("");
 
-                //change tab states
-                tabbedPane.setEnabledAt(0, false);
-                tabbedPane.setEnabledAt(1, false);
-                tabbedPane.setEnabledAt(2, true);
+            //change tab states
+            tabbedPane.setEnabledAt(0, false);
+            tabbedPane.setEnabledAt(1, false);
+            tabbedPane.setEnabledAt(2, true);
 
-                //switch to home tab
-                tabbedPane.setSelectedIndex(2);
-            }
+            //switch to home tab
+            tabbedPane.setSelectedIndex(2);
         } else {
             JOptionPane.showMessageDialog(null, "Wrong Username and Password");
         }
@@ -222,5 +273,17 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         } else {
             JOptionPane.showMessageDialog(null, "Oops, Something went wrong!");
         }
+    }
+
+    /**
+     * Create a restaurant
+     */
+    private void createRestaurant() {
+
+    }
+
+    @Override
+    public void stateChanged(final ChangeEvent e) {
+
     }
 }

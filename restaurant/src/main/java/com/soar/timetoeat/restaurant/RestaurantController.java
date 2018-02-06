@@ -3,23 +3,20 @@ package com.soar.timetoeat.restaurant;
 import com.soar.timetoeat.restaurant.dao.MenuClient;
 import com.soar.timetoeat.restaurant.dao.RestaurantRepository;
 import com.soar.timetoeat.restaurant.domain.Restaurant;
-import com.soar.timetoeat.util.domain.restaurant.RestaurantWithMenu;
 import com.soar.timetoeat.util.domain.menu.Menu;
+import com.soar.timetoeat.util.domain.restaurant.RestaurantWithMenu;
 import com.soar.timetoeat.util.params.CreateRestaurantParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.AuthenticationException;
 import java.util.Objects;
 import java.util.Set;
 
 import static com.soar.timetoeat.restaurant.utils.Converter.convert;
 import static com.soar.timetoeat.util.security.Authorisation.getLoggedInUsername;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.http.HttpStatus.*;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
@@ -63,16 +60,9 @@ public class RestaurantController {
 
     @RequestMapping(value = "restaurant", method = GET)
     public @ResponseBody
-    ResponseEntity<Restaurant> getRestaurantByOwner() {
-        if (getLoggedInUsername().isPresent()) {
-            final Restaurant fetchedRestaurant = repository.findByOwner(getLoggedInUsername().get());
-            if (!Objects.isNull(fetchedRestaurant)) {
-                return ResponseEntity.status(OK).body(fetchedRestaurant);
-            } else {
-                return ResponseEntity.status(NOT_FOUND).body(null);
-            }
-        } else {
-            return ResponseEntity.status(UNAUTHORIZED).body(null);
-        }
+    Restaurant getRestaurantByOwner() {
+        return getLoggedInUsername()
+                .map(repository::findByOwner)
+                .orElseGet(() -> null);
     }
 }

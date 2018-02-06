@@ -14,8 +14,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 public interface AuthClient {
 
     @RequestMapping(value = "login", method = POST)
-    public ResponseEntity<Void> login(@RequestBody final LoginRequest loginRequest);
+    ResponseEntity<Void> login(@RequestBody final LoginRequest loginRequest);
 
     @RequestMapping(value = "users/register", method = POST)
-    public ResponseEntity<Void> register(@RequestBody final CreateUserParams loginRequest);
+    ResponseEntity<Void> register(@RequestBody final CreateUserParams loginRequest);
 }

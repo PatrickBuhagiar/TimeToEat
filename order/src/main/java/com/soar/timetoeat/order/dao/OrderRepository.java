@@ -6,7 +6,6 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 import java.util.List;
 
-@RepositoryRestResource
 public interface OrderRepository extends CrudRepository<RestaurantOrder, Long> {
 
     List<RestaurantOrder> findByRestaurantId(final long restaurantId);
