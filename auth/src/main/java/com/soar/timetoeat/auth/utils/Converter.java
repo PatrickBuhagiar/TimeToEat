@@ -1,6 +1,6 @@
 package com.soar.timetoeat.auth.utils;
 
-import com.soar.timetoeat.util.params.CreateUserParams;
+import com.soar.timetoeat.util.params.auth.CreateUserParams;
 import com.soar.timetoeat.auth.domain.User;
 import com.soar.timetoeat.auth.domain.User.UserBuilder;
 

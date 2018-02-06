@@ -1,11 +1,9 @@
-package com.soar.timetoeat.menu.domain.params;
-
-import com.soar.timetoeat.menu.domain.Item;
+package com.soar.timetoeat.util.params.menu;
 
 import java.util.Objects;
 
 /**
- * Parameters for creating an {@link Item}
+ * Parameters for creating an Item
  */
 public class CreateItemParams {
     private String name;

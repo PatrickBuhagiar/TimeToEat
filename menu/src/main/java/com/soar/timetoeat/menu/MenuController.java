@@ -2,7 +2,7 @@ package com.soar.timetoeat.menu;
 
 import com.soar.timetoeat.menu.dao.MenuRepository;
 import com.soar.timetoeat.menu.domain.Menu;
-import com.soar.timetoeat.menu.domain.params.CreateMenuParams;
+import com.soar.timetoeat.util.params.menu.CreateMenuParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,7 +41,8 @@ public class MenuController {
      */
     @RequestMapping(value = "restaurants/{restaurantId}/menu", method = POST)
     public @ResponseBody
-    Menu createMenu(@PathVariable final long restaurantId, @RequestBody final CreateMenuParams params) {
+    Menu createMenu(@PathVariable final long restaurantId,
+                    @RequestBody final CreateMenuParams params) {
         return repository.save(convert(params, restaurantId));
     }
 }

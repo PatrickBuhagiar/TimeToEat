@@ -3,11 +3,8 @@ package com.soar.timetoeat.menu.utils;
 import com.soar.timetoeat.menu.domain.Item;
 import com.soar.timetoeat.menu.domain.Menu;
 import com.soar.timetoeat.menu.domain.Menu.MenuBuilder;
-import com.soar.timetoeat.menu.domain.Section;
-import com.soar.timetoeat.menu.domain.Section.SectionBuilder;
-import com.soar.timetoeat.menu.domain.params.CreateItemParams;
-import com.soar.timetoeat.menu.domain.params.CreateMenuParams;
-import com.soar.timetoeat.menu.domain.params.CreateSectionParams;
+import com.soar.timetoeat.util.params.menu.CreateItemParams;
+import com.soar.timetoeat.util.params.menu.CreateMenuParams;
 
 import java.util.stream.Collectors;
 
@@ -26,22 +23,6 @@ public class Converter {
     public static Menu convert(final CreateMenuParams params, final long restaurantId) {
         return MenuBuilder.aMenu()
                 .withRestaurantId(restaurantId)
-                .withSections(params.getSections()
-                        .stream()
-                        .map(Converter::convert)
-                        .collect(Collectors.toSet()))
-                .build();
-    }
-
-    /**
-     * Convert from {@link CreateSectionParams} to {@link Section}
-     *
-     * @param params the create Section params
-     * @return the converted section
-     */
-    private static Section convert(final CreateSectionParams params) {
-        return SectionBuilder.aSection()
-                .withName(params.getName())
                 .withItems(params.getItems()
                         .stream()
                         .map(Converter::convert)

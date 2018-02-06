@@ -17,14 +17,14 @@ public class Menu implements Serializable {
     private long id;
     private long restaurantId;
     @OneToMany(cascade = CascadeType.ALL)
-    private Set<Section> sections = new HashSet<>();
+    private Set<Item> items = new HashSet<>();
 
     private Menu() {
     }
 
     private Menu(final MenuBuilder builder) {
         this.restaurantId = builder.restaurantId;
-        this.sections = builder.sections;
+        this.items = builder.items;
     }
 
     public long getId() {
@@ -35,8 +35,8 @@ public class Menu implements Serializable {
         return restaurantId;
     }
 
-    public Set<Section> getSections() {
-        return sections;
+    public Set<Item> getItems() {
+        return items;
     }
 
     @Override
@@ -46,17 +46,17 @@ public class Menu implements Serializable {
         final Menu menu = (Menu) o;
         return getId() == menu.getId() &&
                 getRestaurantId() == menu.getRestaurantId() &&
-                Objects.equals(getSections(), menu.getSections());
+                Objects.equals(getItems(), menu.getItems());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getRestaurantId(), getSections());
+        return Objects.hash(getId(), getRestaurantId(), getItems());
     }
 
     public static final class MenuBuilder {
         private long restaurantId;
-        private Set<Section> sections = new HashSet<>();
+        private Set<Item> items = new HashSet<>();
 
         private MenuBuilder() {
         }
@@ -70,13 +70,8 @@ public class Menu implements Serializable {
             return this;
         }
 
-        public MenuBuilder withSections(Set<Section> sections) {
-            this.sections = sections;
-            return this;
-        }
-
-        public MenuBuilder addSection(final Section section) {
-            this.sections.add(section);
+        public MenuBuilder withItems(Set<Item> items) {
+            this.items = items;
             return this;
         }
 

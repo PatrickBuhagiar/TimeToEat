@@ -1,4 +1,4 @@
-package com.soar.timetoeat.util.params;
+package com.soar.timetoeat.util.params.auth;
 
 import com.soar.timetoeat.util.domain.auth.UserRole;
 

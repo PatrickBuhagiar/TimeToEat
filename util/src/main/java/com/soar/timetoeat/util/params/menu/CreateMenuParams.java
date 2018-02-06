@@ -1,25 +1,23 @@
-package com.soar.timetoeat.menu.domain.params;
-
-import com.soar.timetoeat.menu.domain.Menu;
+package com.soar.timetoeat.util.params.menu;
 
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * Parameters for creating a {@link Menu}
+ * Parameters for creating a Menu
  */
 public class CreateMenuParams {
-    private Set<CreateSectionParams> sections;
+    private Set<CreateItemParams> items;
 
     private CreateMenuParams() {
     }
 
     private CreateMenuParams(final CreateMenuParamsBuilder builder) {
-        this.sections = builder.sections;
+        this.items = builder.items;
     }
 
-    public Set<CreateSectionParams> getSections() {
-        return sections;
+    public Set<CreateItemParams> getItems() {
+        return items;
     }
 
     @Override
@@ -27,17 +25,17 @@ public class CreateMenuParams {
         if (this == o) return true;
         if (!(o instanceof CreateMenuParams)) return false;
         final CreateMenuParams that = (CreateMenuParams) o;
-        return Objects.equals(sections, that.sections);
+        return Objects.equals(items, that.items);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(sections);
+        return Objects.hash(items);
     }
 
     public static final class CreateMenuParamsBuilder {
-        private Set<CreateSectionParams> sections;
+        private Set<CreateItemParams> items;
 
         private CreateMenuParamsBuilder() {
         }
@@ -46,14 +44,14 @@ public class CreateMenuParams {
             return new CreateMenuParamsBuilder();
         }
 
-        public CreateMenuParamsBuilder withSections(Set<CreateSectionParams> sections) {
-            this.sections = sections;
+        public CreateMenuParamsBuilder withItems(Set<CreateItemParams> items) {
+            this.items = items;
             return this;
         }
 
         public CreateMenuParams build() {
             CreateMenuParams createMenuParams = new CreateMenuParams();
-            createMenuParams.sections = this.sections;
+            createMenuParams.items = this.items;
             return createMenuParams;
         }
     }

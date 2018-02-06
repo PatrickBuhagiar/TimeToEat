@@ -5,7 +5,7 @@ import com.soar.timetoeat.restaurant.dao.RestaurantRepository;
 import com.soar.timetoeat.restaurant.domain.Restaurant;
 import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.domain.restaurant.RestaurantWithMenu;
-import com.soar.timetoeat.util.params.CreateRestaurantParams;
+import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

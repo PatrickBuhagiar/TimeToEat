@@ -9,17 +9,17 @@ import java.util.Set;
  */
 public class Menu implements Serializable {
 
-    private Set<Section> sections;
+    private Set<Item> items;
 
     public Menu() {
     }
 
-    public Menu(final Set<Section> sections) {
-        this.sections = sections;
+    public Menu(final Set<Item> items) {
+        this.items = items;
     }
 
-    public Set<Section> getSections() {
-        return sections;
+    public Set<Item> getItems() {
+        return items;
     }
 
     @Override
@@ -27,12 +27,11 @@ public class Menu implements Serializable {
         if (this == o) return true;
         if (!(o instanceof Menu)) return false;
         final Menu menu = (Menu) o;
-        return Objects.equals(getSections(), menu.getSections());
+        return Objects.equals(getItems(), menu.getItems());
     }
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(getSections());
+        return Objects.hash(getItems());
     }
 }

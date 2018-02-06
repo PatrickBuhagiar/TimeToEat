@@ -1,4 +1,4 @@
-package com.soar.timetoeat.util.params;
+package com.soar.timetoeat.util.params.restaurant;
 
 import java.util.Objects;
 

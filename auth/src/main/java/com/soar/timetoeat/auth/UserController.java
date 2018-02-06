@@ -1,7 +1,7 @@
 package com.soar.timetoeat.auth;
 
 import com.soar.timetoeat.auth.dao.ApplicationUserRepository;
-import com.soar.timetoeat.util.params.CreateUserParams;
+import com.soar.timetoeat.util.params.auth.CreateUserParams;
 import com.soar.timetoeat.auth.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

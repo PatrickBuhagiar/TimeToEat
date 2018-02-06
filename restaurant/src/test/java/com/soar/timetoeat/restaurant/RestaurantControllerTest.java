@@ -1,6 +1,6 @@
 package com.soar.timetoeat.restaurant;
 
-import com.soar.timetoeat.util.params.CreateRestaurantParams;
+import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams;
 import com.soar.timetoeat.restaurant.utils.Generator;
 import org.junit.Test;
 import org.junit.runner.RunWith;

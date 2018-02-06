@@ -1,7 +1,7 @@
 package com.soar.timetoeat.restaurant.utils;
 
 import com.soar.timetoeat.util.Unique;
-import com.soar.timetoeat.util.params.CreateRestaurantParams;
+import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams;
 
 /**
  * A utility class for generating classes
