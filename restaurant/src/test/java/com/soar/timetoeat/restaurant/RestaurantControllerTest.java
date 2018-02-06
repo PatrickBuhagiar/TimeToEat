@@ -27,7 +27,7 @@ public class RestaurantControllerTest {
         Bastion.request(JsonRequest
                 .postFromModel("http://localhost:" + port + "/restaurants",
                         params))
-                .withAssertions(JsonResponseAssertions.fromModel(200, convert(params)));
+                .withAssertions(JsonResponseAssertions.fromModel(200, convert(params, null)));
 
     }
 

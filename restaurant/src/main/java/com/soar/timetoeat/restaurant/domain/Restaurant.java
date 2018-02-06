@@ -17,6 +17,7 @@ public class Restaurant {
     private long id;
     private String name;
     private String address;
+    private String owner;
 
     private Restaurant() {}
 
@@ -24,6 +25,7 @@ public class Restaurant {
         this.id = builder.id;
         this.name = builder.name;
         this.address = builder.address;
+        this.owner = builder.owner;
     }
 
     public long getId() {
@@ -38,27 +40,15 @@ public class Restaurant {
         return address;
     }
 
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Restaurant)) return false;
-        final Restaurant that = (Restaurant) o;
-        return getId() == that.getId() &&
-                Objects.equals(getName(), that.getName()) &&
-                Objects.equals(getAddress(), that.getAddress());
+    public String getOwner() {
+        return owner;
     }
-
-    @Override
-    public int hashCode() {
-
-        return Objects.hash(getId(), getName(), getAddress());
-    }
-
 
     public static final class RestaurantBuilder {
         private long id;
         private String name;
         private String address;
+        private String owner;
 
         private RestaurantBuilder() {
         }
@@ -79,6 +69,11 @@ public class Restaurant {
 
         public RestaurantBuilder withAddress(String address) {
             this.address = address;
+            return this;
+        }
+
+        public RestaurantBuilder withOwner(String owner) {
+            this.owner = owner;
             return this;
         }
 

@@ -11,12 +11,15 @@ public class Converter {
     /**
      * Convert from {@link CreateRestaurantParams} to {@link Restaurant}
      * @param params the create restaurant params
+     * @param username The owner of the restaurant
      * @return the converted restaurant
      */
-    public static Restaurant convert(final CreateRestaurantParams params) {
+    public static Restaurant convert(final CreateRestaurantParams params,
+                                     final String username) {
         return Restaurant.RestaurantBuilder.aRestaurant()
                 .withName(params.getName())
                 .withAddress(params.getAddress())
+                .withOwner(username)
                 .build();
     }
 }

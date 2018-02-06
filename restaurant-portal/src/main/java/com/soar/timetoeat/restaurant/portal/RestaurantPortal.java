@@ -1,9 +1,10 @@
 package com.soar.timetoeat.restaurant.portal;
 
-import com.soar.timetoeat.restaurant.portal.dao.AuthServiceClient;
+import com.soar.timetoeat.restaurant.portal.dao.AuthClient;
+import com.soar.timetoeat.restaurant.portal.dao.RestaurantClient;
 import com.soar.timetoeat.restaurant.portal.domain.LoginRequest;
+import com.soar.timetoeat.util.domain.Restaurant;
 import com.soar.timetoeat.util.domain.UserRole;
-import com.soar.timetoeat.util.params.CreateUserParams;
 import com.soar.timetoeat.util.params.CreateUserParams.CreateUserParamsBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,6 +20,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
+import java.util.Objects;
 
 @SpringBootApplication
 @EnableFeignClients
@@ -26,18 +28,20 @@ import java.util.List;
 @EnableDiscoveryClient
 public class RestaurantPortal extends JPanel implements ActionListener {
 
-    private final AuthServiceClient authServiceClient;
+    private final AuthClient authClient;
+    private final RestaurantClient restaurantClient;
 
     private static int frameWidth = 1000;
     private static int frameHeight = 600;
-    private static List<String> token = null;
-
+    private static String token = null;
+    private static Restaurant currentRestaurant;
 
     private JTabbedPane tabbedPane;
 
     //Login fields
     private JTextField login_usernameText;
     private JPasswordField login_passwordText;
+
     //register fields
     private JTextField register_emailText;
     private JTextField register_usernameText;
@@ -45,8 +49,10 @@ public class RestaurantPortal extends JPanel implements ActionListener {
 
 
     @Autowired
-    public RestaurantPortal(final AuthServiceClient authServiceClient) {
-        this.authServiceClient = authServiceClient;
+    public RestaurantPortal(final AuthClient authClient,
+                            final RestaurantClient restaurantClient) {
+        this.authClient = authClient;
+        this.restaurantClient = restaurantClient;
         initWindow();
     }
 
@@ -154,48 +160,65 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     public void actionPerformed(final ActionEvent e) {
         switch (e.getActionCommand()) {
             case "login":
-                final ResponseEntity<Void> loginResponse = authServiceClient.login(new LoginRequest(login_usernameText.getText(), new String(login_passwordText.getPassword())));
-                if (loginResponse.getStatusCode() == HttpStatus.OK) {
-                    //store token locally for future http calls
-                    token = loginResponse.getHeaders().get("Authorization");
-
-                    //clear fields
-                    login_usernameText.setText("");
-                    login_passwordText.setText("");
-
-                    //change tab states
-                    tabbedPane.setEnabledAt(0, false);
-                    tabbedPane.setEnabledAt(1, false);
-                    tabbedPane.setEnabledAt(2, true);
-
-                    //switch to home tab
-                    tabbedPane.setSelectedIndex(2);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Wrong Username and Password");
-                }
+                login();
                 break;
             case "register":
-                final ResponseEntity<Void> newUser = authServiceClient.register(CreateUserParamsBuilder.aCreateUserParams()
-                        .withEmail(register_emailText.getText())
-                        .withPassword(new String(register_passwordText.getPassword()))
-                        .withUsername(register_usernameText.getText())
-                        .withRole(UserRole.RESTAURANT)
-                        .build());
-                if (newUser.getStatusCode() == HttpStatus.OK) {
-                    //clear fields
-                    register_emailText.setText("");
-                    register_passwordText.setText("");
-                    register_usernameText.setText("");
-
-                    //navigate to login
-                    tabbedPane.setSelectedIndex(0);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Oops, Something went wrong!");
-                }
+                register();
                 break;
             default:
                 JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
                 break;
+        }
+    }
+
+    /**
+     * Perform a login
+     */
+    private void login() {
+        final ResponseEntity<Void> loginResponse = authClient.login(new LoginRequest(login_usernameText.getText(), new String(login_passwordText.getPassword())));
+        if (loginResponse.getStatusCode() == HttpStatus.OK) {
+            //store token locally for future http calls
+            token = loginResponse.getHeaders().get("Authorization").get(0);
+            //get Restaurant
+            currentRestaurant = restaurantClient.getRestaurantByOwner(token);
+
+            //clear fields
+            login_usernameText.setText("");
+            login_passwordText.setText("");
+
+            //change tab states
+            tabbedPane.setEnabledAt(0, false);
+            tabbedPane.setEnabledAt(1, false);
+            tabbedPane.setEnabledAt(2, true);
+
+            //switch to home tab
+            tabbedPane.setSelectedIndex(2);
+
+        } else {
+            JOptionPane.showMessageDialog(null, "Wrong Username and Password");
+        }
+    }
+
+    /**
+     * Perform a register user
+     */
+    private void register() {
+        final ResponseEntity<Void> newUser = authClient.register(CreateUserParamsBuilder.aCreateUserParams()
+                .withEmail(register_emailText.getText())
+                .withPassword(new String(register_passwordText.getPassword()))
+                .withUsername(register_usernameText.getText())
+                .withRole(UserRole.RESTAURANT)
+                .build());
+        if (newUser.getStatusCode() == HttpStatus.OK) {
+            //clear fields
+            register_emailText.setText("");
+            register_passwordText.setText("");
+            register_usernameText.setText("");
+
+            //navigate to login
+            tabbedPane.setSelectedIndex(0);
+        } else {
+            JOptionPane.showMessageDialog(null, "Oops, Something went wrong!");
         }
     }
 }

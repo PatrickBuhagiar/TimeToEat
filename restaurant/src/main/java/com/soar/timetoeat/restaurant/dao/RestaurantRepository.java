@@ -12,4 +12,6 @@ public interface RestaurantRepository extends CrudRepository<Restaurant, Long> {
     Restaurant findByName(final String name);
 
     Set<Restaurant> findAll();
+
+    Restaurant findByOwner(final String owner);
 }

@@ -13,9 +13,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static com.soar.timetoeat.util.SecurityConstants.HEADER_STRING;
-import static com.soar.timetoeat.util.SecurityConstants.TOKEN_PREFIX;
-import static com.soar.timetoeat.util.SecurityConstants.SECRET;
+import static com.soar.timetoeat.util.security.SecurityConstants.HEADER_STRING;
+import static com.soar.timetoeat.util.security.SecurityConstants.TOKEN_PREFIX;
+import static com.soar.timetoeat.util.security.SecurityConstants.SECRET;
 
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 

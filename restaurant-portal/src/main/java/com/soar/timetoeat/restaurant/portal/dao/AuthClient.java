@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @FeignClient("AUTH-SERVICE")
-public interface AuthServiceClient {
+public interface AuthClient {
 
     @RequestMapping(value = "login", method = POST)
     public ResponseEntity<Void> login(@RequestBody final LoginRequest loginRequest);
