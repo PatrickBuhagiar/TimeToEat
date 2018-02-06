@@ -1,4 +1,6 @@
-package com.soar.timetoeat.restaurant.domain;
+package com.soar.timetoeat.util.domain.restaurant;
+
+import com.soar.timetoeat.util.domain.menu.Menu;
 
 public class RestaurantWithMenu {
     private String name;
@@ -8,7 +10,7 @@ public class RestaurantWithMenu {
     private RestaurantWithMenu() {
     }
 
-    private RestaurantWithMenu(final String name, final String address, final Menu menu) {
+    public RestaurantWithMenu(final String name, final String address, final Menu menu) {
         this.name = name;
         this.address = address;
         this.menu = menu;
@@ -26,8 +28,5 @@ public class RestaurantWithMenu {
         return menu;
     }
 
-    public static RestaurantWithMenu buildFrom(final Restaurant restaurant,
-                                               final Menu menu) {
-        return new RestaurantWithMenu(restaurant.getName(), restaurant.getAddress(), menu);
-    }
+
 }

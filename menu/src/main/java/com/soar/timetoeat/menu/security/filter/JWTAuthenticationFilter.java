@@ -1,7 +1,7 @@
 package com.soar.timetoeat.menu.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.soar.timetoeat.util.domain.User;
+import com.soar.timetoeat.util.domain.auth.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.security.authentication.AuthenticationManager;

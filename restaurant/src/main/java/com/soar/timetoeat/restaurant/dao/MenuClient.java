@@ -1,6 +1,6 @@
 package com.soar.timetoeat.restaurant.dao;
 
-import com.soar.timetoeat.restaurant.domain.Menu;
+import com.soar.timetoeat.util.domain.menu.Menu;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;

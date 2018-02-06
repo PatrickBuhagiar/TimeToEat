@@ -1,4 +1,4 @@
-package com.soar.timetoeat.util.domain;
+package com.soar.timetoeat.util.domain.restaurant;
 
 import java.io.Serializable;
 import java.util.Objects;

@@ -1,4 +1,4 @@
-package com.soar.timetoeat.util.domain;
+package com.soar.timetoeat.util.domain.auth;
 
 import java.io.Serializable;
 import java.util.Objects;

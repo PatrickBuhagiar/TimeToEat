@@ -3,8 +3,8 @@ package com.soar.timetoeat.restaurant.portal;
 import com.soar.timetoeat.restaurant.portal.dao.AuthClient;
 import com.soar.timetoeat.restaurant.portal.dao.RestaurantClient;
 import com.soar.timetoeat.restaurant.portal.domain.LoginRequest;
-import com.soar.timetoeat.util.domain.Restaurant;
-import com.soar.timetoeat.util.domain.UserRole;
+import com.soar.timetoeat.util.domain.restaurant.Restaurant;
+import com.soar.timetoeat.util.domain.auth.UserRole;
 import com.soar.timetoeat.util.params.CreateUserParams.CreateUserParamsBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,8 +19,6 @@ import org.springframework.http.ResponseEntity;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.List;
-import java.util.Objects;
 
 @SpringBootApplication
 @EnableFeignClients
@@ -180,20 +178,24 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             //store token locally for future http calls
             token = loginResponse.getHeaders().get("Authorization").get(0);
             //get Restaurant
-            currentRestaurant = restaurantClient.getRestaurantByOwner(token);
+            final ResponseEntity<Restaurant> restaurantByOwner = restaurantClient.getRestaurantByOwner(token);
+            if (restaurantByOwner.getStatusCode() == HttpStatus.OK) {
+                currentRestaurant = restaurantByOwner.getBody();
+            }
 
-            //clear fields
-            login_usernameText.setText("");
-            login_passwordText.setText("");
+            if (restaurantByOwner.getStatusCode() != HttpStatus.UNAUTHORIZED) {
+                //clear fields
+                login_usernameText.setText("");
+                login_passwordText.setText("");
 
-            //change tab states
-            tabbedPane.setEnabledAt(0, false);
-            tabbedPane.setEnabledAt(1, false);
-            tabbedPane.setEnabledAt(2, true);
+                //change tab states
+                tabbedPane.setEnabledAt(0, false);
+                tabbedPane.setEnabledAt(1, false);
+                tabbedPane.setEnabledAt(2, true);
 
-            //switch to home tab
-            tabbedPane.setSelectedIndex(2);
-
+                //switch to home tab
+                tabbedPane.setSelectedIndex(2);
+            }
         } else {
             JOptionPane.showMessageDialog(null, "Wrong Username and Password");
         }

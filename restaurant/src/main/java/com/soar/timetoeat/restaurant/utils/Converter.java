@@ -1,5 +1,7 @@
 package com.soar.timetoeat.restaurant.utils;
 
+import com.soar.timetoeat.util.domain.restaurant.RestaurantWithMenu;
+import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.params.CreateRestaurantParams;
 import com.soar.timetoeat.restaurant.domain.Restaurant;
 
@@ -21,5 +23,16 @@ public class Converter {
                 .withAddress(params.getAddress())
                 .withOwner(username)
                 .build();
+    }
+
+    /**
+     * This converts a restaurant and a menu into a RestaurantWithMenu class
+     * @param restaurant the restaurant
+     * @param menu the menu
+     * @return a restaurant with a menu
+     */
+    public static RestaurantWithMenu convert(final Restaurant restaurant,
+                                               final Menu menu) {
+        return new RestaurantWithMenu(restaurant.getName(), restaurant.getAddress(), menu);
     }
 }

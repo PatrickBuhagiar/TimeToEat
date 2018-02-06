@@ -1,14 +1,11 @@
-package com.soar.timetoeat.restaurant.domain;
-
-import com.soar.timetoeat.restaurant.dao.MenuClient;
+package com.soar.timetoeat.util.domain.menu;
 
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * This is a simplified version of Menu without the IDs that will be
- * populated in the Feign dao {@link MenuClient}.
+ * This is a simplified version of Menu without the IDs.
  */
 public class Menu implements Serializable {
 
