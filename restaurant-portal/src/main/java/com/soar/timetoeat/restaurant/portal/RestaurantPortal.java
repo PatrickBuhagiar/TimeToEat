@@ -6,6 +6,7 @@ import com.soar.timetoeat.restaurant.portal.domain.LoginRequest;
 import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
 import com.soar.timetoeat.util.domain.auth.UserRole;
+import com.soar.timetoeat.util.params.CreateRestaurantParams.CreateRestaurantParamsBuilder;
 import com.soar.timetoeat.util.params.CreateUserParams.CreateUserParamsBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -52,7 +53,7 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
     private JPasswordField register_passwordText;
 
     //restaurant fields
-    private JPanel homePanel;
+    private JPanel restaurantPanel;
     private JTextField restaurant_nameText;
     private JTextField restaurant_addressText;
     private JButton createRestaurantButton;
@@ -95,9 +96,9 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
         tabbedPane.addTab("Register", registerPanel);
 
         //home
-        homePanel = new JPanel();
-        placeRestaurantComponents(homePanel);
-        tabbedPane.addTab("Home", homePanel);
+        restaurantPanel = new JPanel();
+        placeRestaurantComponents(restaurantPanel);
+        tabbedPane.addTab("Home", restaurantPanel);
         //initially, home won't be accessible
         tabbedPane.setEnabledAt(2, false);
 
@@ -192,7 +193,7 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
     private void updateRestaurantFields(final JPanel panel) {
         if (Objects.isNull(currentRestaurant)) {
             createRestaurantButton = new JButton("create restaurant");
-            createRestaurantButton.setBounds(270 + (frameWidth >> 2), 80 + (frameHeight >> 2), 80, 25);
+            createRestaurantButton.setBounds(200 + (frameWidth >> 2), 80 + (frameHeight >> 2), 150, 25);
             createRestaurantButton.addActionListener(this);
             panel.add(createRestaurantButton);
         } else {
@@ -215,6 +216,7 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
                 break;
             case "create restaurant":
                 createRestaurant();
+                break;
             default:
                 JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
                 break;
@@ -234,7 +236,7 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
             token = loginResponse.getHeaders().get("Authorization").get(0);
             //get Restaurant
             currentRestaurant = restaurantClient.getRestaurantByOwner(token);
-            updateRestaurantFields(homePanel);
+            updateRestaurantFields(restaurantPanel);
 
             //clear fields
             login_usernameText.setText("");
@@ -279,7 +281,19 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
      * Create a restaurant
      */
     private void createRestaurant() {
+        if (Objects.isNull(currentRestaurant)) {
+            final ResponseEntity<Restaurant> restaurantResponse = restaurantClient.createRestaurant(token, CreateRestaurantParamsBuilder.aCreateRestaurantParams()
+                    .withAddress(restaurant_addressText.getText())
+                    .withName(restaurant_nameText.getText())
+                    .build());
 
+            if (restaurantResponse.getStatusCode() == HttpStatus.CREATED) {
+                currentRestaurant = restaurantResponse.getBody();
+                updateRestaurantFields(restaurantPanel);
+            } else {
+                JOptionPane.showMessageDialog(null, "failed to create Restaurant!");
+            }
+        }
     }
 
     @Override
