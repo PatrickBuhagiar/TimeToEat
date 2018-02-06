@@ -1,8 +1,9 @@
-package com.soar.timetoeat.order.security;
+package com.soar.timetoeat.menu.security;
 
-import com.soar.timetoeat.order.security.filter.JWTAuthenticationFilter;
-import com.soar.timetoeat.order.security.filter.JWTAuthorizationFilter;
+import com.soar.timetoeat.menu.security.filter.JWTAuthenticationFilter;
+import com.soar.timetoeat.menu.security.filter.JWTAuthorizationFilter;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,6 +29,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable().authorizeRequests()
+                .antMatchers(HttpMethod.GET, "/restaurants/{^[\\\\d]$}/menu").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .addFilter(new JWTAuthenticationFilter(authenticationManager()))

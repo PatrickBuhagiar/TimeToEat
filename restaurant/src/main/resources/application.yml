@@ -1,7 +1,7 @@
 spring:
   profiles: default
 server:
-  port: 3001 #${PORT:${SERVER_PORT:0}}   # Select any available port if neither port nor server port are specified.
+  port: 0 #random port
 eureka:
   instance:
     leaseRenewalIntervalInSeconds: 1
