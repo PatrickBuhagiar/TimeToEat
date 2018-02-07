@@ -269,16 +269,16 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         addToMenuButton.addActionListener(this);
         panel.add(addToMenuButton);
 
+        createRestaurantButton = new JButton("create restaurant and menu");
+        createRestaurantButton.setBounds(10, 300, 250, 25);
+        createRestaurantButton.addActionListener(this);
+        panel.add(createRestaurantButton);
+
         updateRestaurantFields(panel);
     }
 
     private void updateRestaurantFields(final JPanel panel) {
-        if (Objects.isNull(currentRestaurant) && Objects.isNull(currentMenu)) {
-            createRestaurantButton = new JButton("create restaurant and menu");
-            createRestaurantButton.setBounds(10, 300, 250, 25);
-            createRestaurantButton.addActionListener(this);
-            panel.add(createRestaurantButton);
-        } else {
+        if (!Objects.isNull(currentRestaurant) && !Objects.isNull(currentMenu)) {
             restaurant_nameText.setText(currentRestaurant.getName());
             restaurant_nameText.setEditable(false);
             restaurant_addressText.setText(currentRestaurant.getAddress());
@@ -294,9 +294,12 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             panel.remove(menu_nameText);
             panel.remove(unitPriceLabel);
             panel.remove(unitPriceText);
+            panel.remove(createRestaurantButton);
 
             //populate table
             populateMenuTableFromCurrentMenu();
+            panel.revalidate();
+            panel.repaint();
         }
     }
 
