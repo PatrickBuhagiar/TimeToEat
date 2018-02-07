@@ -16,8 +16,8 @@ public interface MenuClient {
     Menu getMenu(@PathVariable("restaurantId") final Long restaurantId);
 
     @RequestMapping(value = "restaurants/{restaurantId}/menu", method = POST)
-    public @ResponseBody
+    @ResponseBody
     Menu createMenu(@RequestHeader("Authorization") String token,
-                    @PathVariable final long restaurantId,
+                    @PathVariable("restaurantId") final long restaurantId,
                     @RequestBody final CreateMenuParams params);
 }

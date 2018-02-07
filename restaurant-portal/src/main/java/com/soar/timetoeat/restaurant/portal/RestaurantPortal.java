@@ -1,11 +1,16 @@
 package com.soar.timetoeat.restaurant.portal;
 
 import com.soar.timetoeat.restaurant.portal.dao.AuthClient;
+import com.soar.timetoeat.restaurant.portal.dao.MenuClient;
 import com.soar.timetoeat.restaurant.portal.dao.RestaurantClient;
 import com.soar.timetoeat.restaurant.portal.domain.LoginRequest;
 import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
 import com.soar.timetoeat.util.domain.auth.UserRole;
+import com.soar.timetoeat.util.params.menu.CreateItemParams;
+import com.soar.timetoeat.util.params.menu.CreateItemParams.CreateItemParamsBuilder;
+import com.soar.timetoeat.util.params.menu.CreateMenuParams;
+import com.soar.timetoeat.util.params.menu.CreateMenuParams.CreateMenuParamsBuilder;
 import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams.CreateRestaurantParamsBuilder;
 import com.soar.timetoeat.util.params.auth.CreateUserParams.CreateUserParamsBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,23 +24,26 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Objects;
+import java.text.NumberFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @SpringBootApplication
 @EnableFeignClients
 @EnableEurekaClient
 @EnableDiscoveryClient
-public class RestaurantPortal extends JPanel implements ActionListener, ChangeListener {
+public class RestaurantPortal extends JPanel implements ActionListener {
 
     private static JFrame frame;
     private final AuthClient authClient;
     private final RestaurantClient restaurantClient;
+    private final MenuClient menuClient;
 
-    private static int frameWidth = 1000;
+    private static int frameWidth = 650;
     private static int frameHeight = 600;
     private static String token = null;
     private static Restaurant currentRestaurant;
@@ -58,12 +66,24 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
     private JTextField restaurant_addressText;
     private JButton createRestaurantButton;
 
+    //menu fields
+    private DefaultTableModel dtm;
+    private JTextField menu_nameText;
+    private JTextField menu_descriptionText;
+    private JFormattedTextField unitPriceText;
+    private JButton addToMenuButton;
+    private JLabel addToMenuLabel;
+    private JLabel menuItemLabel;
+    private JLabel menuDescriptionLabel;
+    private JLabel unitPriceLabel;
 
     @Autowired
     public RestaurantPortal(final AuthClient authClient,
-                            final RestaurantClient restaurantClient) {
+                            final RestaurantClient restaurantClient,
+                            final MenuClient menuClient) {
         this.authClient = authClient;
         this.restaurantClient = restaurantClient;
+        this.menuClient = menuClient;
         initWindow();
     }
 
@@ -112,58 +132,56 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
         panel.setLayout(null);
 
         JLabel userLabel = new JLabel("Username");
-        userLabel.setBounds(100 + (frameWidth >> 2), 10 + (frameHeight >> 2), 80, 25);
+        userLabel.setBounds(30 + (frameWidth >> 2), 10 + (frameHeight >> 2), 80, 25);
         panel.add(userLabel);
 
         login_usernameText = new JTextField(30);
-        login_usernameText.setBounds(190 + (frameWidth >> 2), 10 + (frameHeight >> 2), 160, 25);
+        login_usernameText.setBounds(120 + (frameWidth >> 2), 10 + (frameHeight >> 2), 160, 25);
         panel.add(login_usernameText);
 
         JLabel passwordLabel = new JLabel("Password");
-        passwordLabel.setBounds(100 + (frameWidth >> 2), 40 + (frameHeight >> 2), 80, 25);
+        passwordLabel.setBounds(30 + (frameWidth >> 2), 40 + (frameHeight >> 2), 80, 25);
         panel.add(passwordLabel);
 
         login_passwordText = new JPasswordField(30);
-        login_passwordText.setBounds(190 + (frameWidth >> 2), 40 + (frameHeight >> 2), 160, 25);
+        login_passwordText.setBounds(120 + (frameWidth >> 2), 40 + (frameHeight >> 2), 160, 25);
         panel.add(login_passwordText);
 
         JButton loginButton = new JButton("login");
-        loginButton.setBounds(270 + (frameWidth >> 2), 80 + (frameHeight >> 2), 80, 25);
+        loginButton.setBounds(200 + (frameWidth >> 2), 80 + (frameHeight >> 2), 80, 25);
         loginButton.addActionListener(this);
         panel.add(loginButton);
-
-
     }
 
     private void placeRegisterComponents(final JPanel panel) {
         panel.setLayout(null);
 
         JLabel userLabel = new JLabel("Username");
-        userLabel.setBounds(100 + (frameWidth >> 2), 10 + (frameHeight >> 2), 80, 25);
+        userLabel.setBounds(30 + (frameWidth >> 2), 10 + (frameHeight >> 2), 80, 25);
         panel.add(userLabel);
 
         register_usernameText = new JTextField(30);
-        register_usernameText.setBounds(190 + (frameWidth >> 2), 10 + (frameHeight >> 2), 160, 25);
+        register_usernameText.setBounds(120 + (frameWidth >> 2), 10 + (frameHeight >> 2), 160, 25);
         panel.add(register_usernameText);
 
         JLabel emailLabel = new JLabel("Email");
-        emailLabel.setBounds(100 + (frameWidth >> 2), 40 + (frameHeight >> 2), 80, 25);
+        emailLabel.setBounds(30 + (frameWidth >> 2), 40 + (frameHeight >> 2), 80, 25);
         panel.add(emailLabel);
 
         register_emailText = new JTextField(30);
-        register_emailText.setBounds(190 + (frameWidth >> 2), 40 + (frameHeight >> 2), 160, 25);
+        register_emailText.setBounds(120 + (frameWidth >> 2), 40 + (frameHeight >> 2), 160, 25);
         panel.add(register_emailText);
 
         JLabel passwordLabel = new JLabel("Password");
-        passwordLabel.setBounds(100 + (frameWidth >> 2), 70 + (frameHeight >> 2), 80, 25);
+        passwordLabel.setBounds(30 + (frameWidth >> 2), 70 + (frameHeight >> 2), 80, 25);
         panel.add(passwordLabel);
 
         register_passwordText = new JPasswordField(30);
-        register_passwordText.setBounds(190 + (frameWidth >> 2), 70 + (frameHeight >> 2), 160, 25);
+        register_passwordText.setBounds(120 + (frameWidth >> 2), 70 + (frameHeight >> 2), 160, 25);
         panel.add(register_passwordText);
 
         JButton registerButton = new JButton("register");
-        registerButton.setBounds(270 + (frameWidth >> 2), 110 + (frameHeight >> 2), 80, 25);
+        registerButton.setBounds(200 + (frameWidth >> 2), 110 + (frameHeight >> 2), 80, 25);
         registerButton.addActionListener(this);
         panel.add(registerButton);
     }
@@ -171,29 +189,93 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
     private void placeRestaurantComponents(final JPanel panel) {
         panel.setLayout(null);
 
-        JLabel nameLabel = new JLabel("Restaurant");
-        nameLabel.setBounds(100 + (frameWidth >> 2), 10 + (frameHeight >> 2), 80, 25);
+        //add restaurant details
+        JLabel detailsLabel = new JLabel("Restaurant Details");
+        detailsLabel.setBounds(10, 10, 200, 30);
+        detailsLabel.setFont(new Font(detailsLabel.getName(), Font.BOLD, 20));
+        panel.add(detailsLabel);
+
+
+        JLabel nameLabel = new JLabel("Name");
+        nameLabel.setBounds(10, 40, 80, 25);
         panel.add(nameLabel);
 
         restaurant_nameText = new JTextField(30);
-        restaurant_nameText.setBounds(190 + (frameWidth >> 2), 10 + (frameHeight >> 2), 160, 25);
+        restaurant_nameText.setBounds(100, 40, 160, 25);
         panel.add(restaurant_nameText);
 
         JLabel addressLabel = new JLabel("Address");
-        addressLabel.setBounds(100 + (frameWidth >> 2), 40 + (frameHeight >> 2), 80, 25);
+        addressLabel.setBounds(10, 70, 80, 25);
         panel.add(addressLabel);
 
         restaurant_addressText = new JTextField(30);
-        restaurant_addressText.setBounds(190 + (frameWidth >> 2), 40 + (frameHeight >> 2), 160, 25);
+        restaurant_addressText.setBounds(100 , 70 , 160, 25);
         panel.add(restaurant_addressText);
+
+        //Add menu table
+        JLabel menuDetails = new JLabel("Menu Items");
+        menuDetails.setBounds(280, 10, 200, 30);
+        menuDetails.setFont(new Font(menuDetails.getName(), Font.BOLD, 20));
+        panel.add(menuDetails);
+
+        String[] columnNames = new String[]{"Name", "Description", "UnitPrice"};
+        JTable menuTable = new JTable();
+        menuTable.setBounds(280, 40, 300, 400);
+        dtm = new DefaultTableModel(0,0);
+        dtm.setColumnIdentifiers(columnNames);
+        menuTable.setModel(dtm);
+        panel.add(menuTable);
+
+        //Add to menu fields
+        addToMenuLabel = new JLabel("Add To Menu");
+        addToMenuLabel.setBounds(10, 100, 200, 30);
+        addToMenuLabel.setFont(new Font(addToMenuLabel.getName(), Font.BOLD, 20));
+        panel.add(addToMenuLabel);
+
+        menuItemLabel = new JLabel("Name");
+        menuItemLabel.setBounds(10, 130, 80, 25);
+        panel.add(menuItemLabel);
+
+        menu_nameText = new JTextField(30);
+        menu_nameText.setBounds(100 , 130 , 160, 25);
+        panel.add(menu_nameText);
+
+        menuDescriptionLabel = new JLabel("Description");
+        menuDescriptionLabel.setBounds(10, 160, 80, 25);
+        panel.add(menuDescriptionLabel);
+
+        menu_descriptionText = new JTextField(30);
+        menu_descriptionText.setBounds(100 , 160 , 160, 25);
+        panel.add(menu_descriptionText);
+
+        unitPriceLabel = new JLabel("Unit Price");
+        unitPriceLabel.setBounds(10, 190, 80, 25);
+        panel.add(unitPriceLabel);
+
+        NumberFormat format = NumberFormat.getCurrencyInstance(Locale.UK);
+        format.setMaximumFractionDigits(2);
+        NumberFormatter formatter = new NumberFormatter(format);
+        formatter.setMinimum(0.0);
+        formatter.setMaximum(1000.0);
+        formatter.setAllowsInvalid(false);
+        formatter.setOverwriteMode(true);
+        unitPriceText = new JFormattedTextField(formatter);
+        unitPriceText.setBounds(100, 190, 160, 25);
+        unitPriceText.setValue(0.0);
+        panel.add(unitPriceText);
+
+        addToMenuButton = new JButton("add to menu");
+        addToMenuButton.setBounds(100, 220 ,160, 25);
+        addToMenuButton.addActionListener(this);
+        panel.add(addToMenuButton);
 
         updateRestaurantFields(panel);
     }
 
     private void updateRestaurantFields(final JPanel panel) {
-        if (Objects.isNull(currentRestaurant)) {
-            createRestaurantButton = new JButton("create restaurant");
-            createRestaurantButton.setBounds(200 + (frameWidth >> 2), 80 + (frameHeight >> 2), 150, 25);
+        if (Objects.isNull(currentRestaurant) && Objects.isNull(currentMenu)) {
+            createRestaurantButton = new JButton("create restaurant and menu");
+            createRestaurantButton.setBounds(10, 300, 250, 25);
             createRestaurantButton.addActionListener(this);
             panel.add(createRestaurantButton);
         } else {
@@ -201,7 +283,20 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
             restaurant_nameText.setEditable(false);
             restaurant_addressText.setText(currentRestaurant.getAddress());
             restaurant_addressText.setEditable(false);
+
+            //remove fields
             panel.remove(createRestaurantButton);
+            panel.remove(addToMenuButton);
+            panel.remove(addToMenuLabel);
+            panel.remove(menuDescriptionLabel);
+            panel.remove(menu_descriptionText);
+            panel.remove(menuItemLabel);
+            panel.remove(menu_nameText);
+            panel.remove(unitPriceLabel);
+            panel.remove(unitPriceText);
+
+            //populate table
+            populateMenuTableFromCurrentMenu();
         }
     }
 
@@ -214,8 +309,11 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
             case "register":
                 register();
                 break;
-            case "create restaurant":
-                createRestaurant();
+            case "create restaurant and menu":
+                createRestaurantAndMenu();
+                break;
+            case "add to menu":
+                addToMenu();
                 break;
             default:
                 JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
@@ -223,7 +321,6 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
         }
         frame.validate();
     }
-
 
 
     /**
@@ -236,6 +333,9 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
             token = loginResponse.getHeaders().get("Authorization").get(0);
             //get Restaurant
             currentRestaurant = restaurantClient.getRestaurantByOwner(token);
+            if (!Objects.isNull(currentRestaurant)) {
+                currentMenu = menuClient.getMenu(currentRestaurant.getId());
+            }
             updateRestaurantFields(restaurantPanel);
 
             //clear fields
@@ -280,7 +380,7 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
     /**
      * Create a restaurant
      */
-    private void createRestaurant() {
+    private void createRestaurantAndMenu() {
         if (Objects.isNull(currentRestaurant)) {
             final ResponseEntity<Restaurant> restaurantResponse = restaurantClient.createRestaurant(token, CreateRestaurantParamsBuilder.aCreateRestaurantParams()
                     .withAddress(restaurant_addressText.getText())
@@ -288,7 +388,11 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
                     .build());
 
             if (restaurantResponse.getStatusCode() == HttpStatus.CREATED) {
-                currentRestaurant = restaurantResponse.getBody();
+                final Restaurant restaurant = restaurantResponse.getBody();
+                final Menu menu = menuClient.createMenu(token, restaurant.getId(), extractMenuParamsFromTable());
+
+                currentRestaurant = restaurant;
+                currentMenu = menu;
                 updateRestaurantFields(restaurantPanel);
             } else {
                 JOptionPane.showMessageDialog(null, "failed to create Restaurant!");
@@ -296,8 +400,41 @@ public class RestaurantPortal extends JPanel implements ActionListener, ChangeLi
         }
     }
 
-    @Override
-    public void stateChanged(final ChangeEvent e) {
+    private CreateMenuParams extractMenuParamsFromTable(){
+        Set<CreateItemParams> itemParams = new HashSet<>();
+        final Object[][] tableData = new Object[dtm.getRowCount()][dtm.getColumnCount()];
+        for (int i = 0; i < dtm.getRowCount(); i++) {
+            for (int j = 0; j < dtm.getColumnCount(); j++) {
+                tableData[i][j] = dtm.getValueAt(i,j);
+            }
 
+            final CreateItemParams params = CreateItemParamsBuilder.aCreateItemParams()
+                    .withName(tableData[i][0].toString())
+                    .withDescription(tableData[i][1].toString())
+                    .withUnitPrice(Double.valueOf(tableData[i][2].toString()))
+                    .build();
+            itemParams.add(params);
+        }
+
+        return CreateMenuParamsBuilder.aCreateMenuParams()
+                .withItems(itemParams)
+                .build();
+    }
+
+    private void populateMenuTableFromCurrentMenu() {
+        dtm.setRowCount(0);
+        currentMenu.getItems()
+                .forEach(item -> dtm.addRow(new Object[]{item.getName(), item.getDescription(), item.getUnitPrice()}));
+    }
+
+    /**
+     * Add item to menu table
+     */
+    private void addToMenu() {
+        double price = Double.valueOf(unitPriceText.getValue().toString().replaceAll("[^\\d.]+", ""));
+        dtm.addRow(new Object[]{menu_nameText.getText(), menu_descriptionText.getText(), price});
+        menu_nameText.setText("");
+        menu_descriptionText.setText("");
+        unitPriceText.setValue(0.0);
     }
 }
