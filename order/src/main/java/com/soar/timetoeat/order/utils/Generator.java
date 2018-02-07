@@ -1,7 +1,7 @@
 package com.soar.timetoeat.order.utils;
 
-import com.soar.timetoeat.order.domain.params.CreateOrderItemParams;
-import com.soar.timetoeat.order.domain.params.CreateOrderParams;
+import com.soar.timetoeat.util.params.order.CreateOrderItemParams;
+import com.soar.timetoeat.util.params.order.CreateOrderParams;
 import com.soar.timetoeat.util.Unique;
 
 import java.util.HashSet;

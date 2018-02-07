@@ -1,4 +1,4 @@
-package com.soar.timetoeat.order.domain.params;
+package com.soar.timetoeat.util.params.order;
 
 import java.io.Serializable;
 import java.util.HashSet;

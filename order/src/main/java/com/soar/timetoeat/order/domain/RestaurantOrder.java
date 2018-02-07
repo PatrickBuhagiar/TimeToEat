@@ -1,5 +1,7 @@
 package com.soar.timetoeat.order.domain;
 
+import com.soar.timetoeat.util.domain.order.OrderState;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.HashSet;
@@ -19,8 +21,8 @@ public class RestaurantOrder implements Serializable {
     private double totalPrice;
     @OneToMany(cascade = CascadeType.ALL)
     private Set<OrderItem> items = new HashSet<>();
-    //TODO add user id
-
+    private String clientUsername;
+    private String restaurantUsername;
 
     private RestaurantOrder() {
     }
@@ -69,8 +71,24 @@ public class RestaurantOrder implements Serializable {
         return items;
     }
 
+    public String getClientUsername() {
+        return clientUsername;
+    }
+
+    public String getRestaurantUsername() {
+        return restaurantUsername;
+    }
+
     public void setState(final OrderState state) {
         this.state = state;
+    }
+
+    public void setClientUsername(final String clientUsername) {
+        this.clientUsername = clientUsername;
+    }
+
+    public void setRestaurantUsername(final String restaurantUsername) {
+        this.restaurantUsername = restaurantUsername;
     }
 
     public void setExpectedDeliveryTime(final Long expectedDeliveryTime) {

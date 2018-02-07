@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface OrderRepository extends CrudRepository<RestaurantOrder, Long> {
 
-    List<RestaurantOrder> findByRestaurantId(final long restaurantId);
+    List<RestaurantOrder> findByRestaurantUsername(final String restaurantUsername);
 }

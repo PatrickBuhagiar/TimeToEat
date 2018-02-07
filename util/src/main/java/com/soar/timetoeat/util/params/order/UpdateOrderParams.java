@@ -1,6 +1,6 @@
-package com.soar.timetoeat.order.domain.params;
+package com.soar.timetoeat.util.params.order;
 
-import com.soar.timetoeat.order.domain.OrderState;
+import com.soar.timetoeat.util.domain.order.OrderState;
 
 public class UpdateOrderParams {
     private OrderState state;

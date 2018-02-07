@@ -242,7 +242,7 @@ public class ClientPortal extends JPanel implements ActionListener {
                     panel.add(menuDetails);
 
                     //Add table
-                    String[] columnNames = new String[]{"Name", "Description", "UnitPrice", "quantity"};
+                    String[] columnNames = new String[]{"Name", "Description", "UnitPrice", "Quantity"};
                     JTable menuTable = new JTable() {
                         @Override
                         public boolean isCellEditable(int row, int column){
@@ -289,6 +289,9 @@ public class ClientPortal extends JPanel implements ActionListener {
                 break;
             case "register":
                 register();
+                break;
+            case "create order":
+                createOrder();
                 break;
             default:
                 JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
@@ -344,6 +347,13 @@ public class ClientPortal extends JPanel implements ActionListener {
         } else {
             JOptionPane.showMessageDialog(null, "Oops, Something went wrong!");
         }
+    }
+
+    /**
+     * Create an order
+     */
+    private void createOrder() {
+
     }
 
 }

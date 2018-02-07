@@ -1,4 +1,4 @@
-package com.soar.timetoeat.order.domain;
+package com.soar.timetoeat.util.domain.order;
 
 public enum OrderState {
 

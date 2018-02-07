@@ -1,10 +1,10 @@
 package com.soar.timetoeat.order.utils;
 
-import com.soar.timetoeat.order.domain.OrderState;
+import com.soar.timetoeat.util.domain.order.OrderState;
 import com.soar.timetoeat.order.domain.RestaurantOrder;
 import com.soar.timetoeat.order.domain.OrderItem;
-import com.soar.timetoeat.order.domain.params.CreateOrderItemParams;
-import com.soar.timetoeat.order.domain.params.CreateOrderParams;
+import com.soar.timetoeat.util.params.order.CreateOrderItemParams;
+import com.soar.timetoeat.util.params.order.CreateOrderParams;
 
 import java.util.stream.Collectors;
 
