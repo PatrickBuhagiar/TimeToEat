@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -63,6 +64,7 @@ public class ClientPortal extends JPanel implements ActionListener {
     private JTextField restaurant_nameText;
     private JTextField restaurant_addressText;
     private static boolean selectedAtLeastOneRestaurant = false;
+    private DefaultTableModel dtm;
 
     @Autowired
     public ClientPortal(final AuthClient authClient,
@@ -190,7 +192,7 @@ public class ClientPortal extends JPanel implements ActionListener {
                 .collect(Collectors.toList())
                 .toArray(restaurantNames);
         restaurantList = new JList<>(restaurantNames);
-        restaurantList.setBounds(10, 40, 200, 300);
+        restaurantList.setBounds(10, 40, 200, 400);
         restaurantList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
 
@@ -233,13 +235,38 @@ public class ClientPortal extends JPanel implements ActionListener {
                     restaurant_addressText.setEditable(false);
                     panel.add(restaurant_addressText);
 
+                    JLabel menuDetails = new JLabel("Order Menu");
+                    menuDetails.setBounds(220, 100, 200, 30);
+                    menuDetails.setFont(new Font(menuDetails.getName(), Font.BOLD, 20));
+                    panel.add(menuDetails);
+
+                    String[] columnNames = new String[]{"Name", "Description", "UnitPrice", "quantity"};
+                    JTable menuTable = new JTable() {
+                        @Override
+                        public boolean isCellEditable(int row, int column){
+                            return column == 3;
+                        }
+                    };
+                    menuTable.setBounds(220, 130, 380, 310);
+                    dtm = new DefaultTableModel(0,0);
+                    dtm.setColumnIdentifiers(columnNames);
+                    menuTable.setModel(dtm);
+                    panel.add(menuTable);
+
                     panel.revalidate();
                     panel.repaint();
                 }
+                populateMenuTableFromCurrentMenu();
                 restaurant_nameText.setText(selectedRestaurant.getName());
                 restaurant_addressText.setText(selectedRestaurant.getAddress());
             }
         }
+    }
+
+    private void populateMenuTableFromCurrentMenu() {
+        dtm.setRowCount(0);
+        selectedRestaurant.getMenu().getItems()
+                .forEach(item -> dtm.addRow(new Object[]{item.getName(), item.getDescription(), item.getUnitPrice(), 0}));
     }
 
     @Override
