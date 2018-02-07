@@ -218,11 +218,12 @@ public class RestaurantPortal extends JPanel implements ActionListener {
 
         String[] columnNames = new String[]{"Name", "Description", "UnitPrice"};
         JTable menuTable = new JTable();
-        menuTable.setBounds(280, 40, 300, 400);
         dtm = new DefaultTableModel(0,0);
         dtm.setColumnIdentifiers(columnNames);
         menuTable.setModel(dtm);
-        panel.add(menuTable);
+        final JScrollPane menuScrollPane = new JScrollPane(menuTable);
+        menuScrollPane.setBounds(280, 40, 300, 400);
+        panel.add(menuScrollPane);
 
         //Add to menu fields
         addToMenuLabel = new JLabel("Add To Menu");

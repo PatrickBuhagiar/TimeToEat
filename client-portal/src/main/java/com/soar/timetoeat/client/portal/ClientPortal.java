@@ -65,6 +65,7 @@ public class ClientPortal extends JPanel implements ActionListener {
     private JTextField restaurant_addressText;
     private static boolean selectedAtLeastOneRestaurant = false;
     private DefaultTableModel dtm;
+    private JButton createOrderButton;
 
     @Autowired
     public ClientPortal(final AuthClient authClient,
@@ -240,18 +241,29 @@ public class ClientPortal extends JPanel implements ActionListener {
                     menuDetails.setFont(new Font(menuDetails.getName(), Font.BOLD, 20));
                     panel.add(menuDetails);
 
+                    //Add table
                     String[] columnNames = new String[]{"Name", "Description", "UnitPrice", "quantity"};
                     JTable menuTable = new JTable() {
                         @Override
                         public boolean isCellEditable(int row, int column){
                             return column == 3;
                         }
+
+
                     };
-                    menuTable.setBounds(220, 130, 380, 310);
                     dtm = new DefaultTableModel(0,0);
                     dtm.setColumnIdentifiers(columnNames);
                     menuTable.setModel(dtm);
-                    panel.add(menuTable);
+                    final JScrollPane jScrollPane = new JScrollPane(menuTable);
+                    jScrollPane.setVisible(true);
+                    jScrollPane.setBounds(220, 130, 380, 310);
+                    panel.add(jScrollPane);
+
+                    //create order button
+                    createOrderButton = new JButton("create order");
+                    createOrderButton.setBounds(480, 450, 120, 25);
+                    createOrderButton.addActionListener(this);
+                    panel.add(createOrderButton);
 
                     panel.revalidate();
                     panel.repaint();
