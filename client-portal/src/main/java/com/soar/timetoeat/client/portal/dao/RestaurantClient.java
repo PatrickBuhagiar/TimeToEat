@@ -15,7 +15,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @FeignClient("RESTAURANT-SERVICE")
 public interface RestaurantClient {
 
-    @RequestMapping(value = "/restaurant/{restaurantName}", method = GET)
+    @RequestMapping(value = "/restaurants/{restaurantName}", method = GET)
     @ResponseBody
     ResponseEntity<RestaurantWithMenu> getRestaurant(@PathVariable("restaurantName") final String restaurantName);
 

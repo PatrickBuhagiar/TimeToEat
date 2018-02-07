@@ -4,6 +4,7 @@ import com.soar.timetoeat.client.portal.dao.AuthClient;
 import com.soar.timetoeat.client.portal.dao.RestaurantClient;
 import com.soar.timetoeat.util.domain.auth.UserRole;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
+import com.soar.timetoeat.util.domain.restaurant.RestaurantWithMenu;
 import com.soar.timetoeat.util.params.auth.CreateUserParams.CreateUserParamsBuilder;
 import com.soar.timetoeat.util.params.auth.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,7 +44,7 @@ public class ClientPortal extends JPanel implements ActionListener {
     private static String token = null;
     private static Set<Restaurant> restaurants;
     private static String selectedRestaurantName;
-    private static Restaurant selectedRestaurant;
+    private static RestaurantWithMenu selectedRestaurant;
 
     private JTabbedPane tabbedPane;
 
@@ -58,6 +60,9 @@ public class ClientPortal extends JPanel implements ActionListener {
     //restaurant fields
     private JPanel homePanel;
     private JList<String> restaurantList;
+    private JTextField restaurant_nameText;
+    private JTextField restaurant_addressText;
+    private static boolean selectedAtLeastOneRestaurant = false;
 
     @Autowired
     public ClientPortal(final AuthClient authClient,
@@ -174,8 +179,6 @@ public class ClientPortal extends JPanel implements ActionListener {
         detailsLabel.setFont(new Font(detailsLabel.getName(), Font.BOLD, 20));
         panel.add(detailsLabel);
 
-//        updateHomeFields(panel);
-
     }
 
     private void updateHomeFields(final JPanel panel) {
@@ -190,10 +193,53 @@ public class ClientPortal extends JPanel implements ActionListener {
         restaurantList.setBounds(10, 40, 200, 300);
         restaurantList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
+
                 selectedRestaurantName = restaurantList.getSelectedValue();
+                updateSelectedRestaurant(panel);
+                selectedAtLeastOneRestaurant = true;
             }
         });
         panel.add(restaurantList);
+    }
+
+    private void updateSelectedRestaurant(final JPanel panel) {
+        if (!Objects.isNull(selectedRestaurantName)) {
+            final ResponseEntity<RestaurantWithMenu> restaurantResponse = restaurantClient.getRestaurant(selectedRestaurantName);
+            if (restaurantResponse.getStatusCode() == HttpStatus.OK) {
+                selectedRestaurant = restaurantResponse.getBody();
+
+                if (!selectedAtLeastOneRestaurant) {
+                    //add restaurant details
+                    JLabel detailsLabel = new JLabel("Selected Restaurant");
+                    detailsLabel.setBounds(220, 10, 200, 30);
+                    detailsLabel.setFont(new Font(detailsLabel.getName(), Font.BOLD, 20));
+                    panel.add(detailsLabel);
+
+                    JLabel nameLabel = new JLabel("Name");
+                    nameLabel.setBounds(220, 40, 80, 25);
+                    panel.add(nameLabel);
+
+                    restaurant_nameText = new JTextField(30);
+                    restaurant_nameText.setBounds(310, 40, 160, 25);
+                    restaurant_nameText.setEditable(false);
+                    panel.add(restaurant_nameText);
+
+                    JLabel addressLabel = new JLabel("Address");
+                    addressLabel.setBounds(220, 70, 80, 25);
+                    panel.add(addressLabel);
+
+                    restaurant_addressText = new JTextField(30);
+                    restaurant_addressText.setBounds(310, 70, 160, 25);
+                    restaurant_addressText.setEditable(false);
+                    panel.add(restaurant_addressText);
+
+                    panel.revalidate();
+                    panel.repaint();
+                }
+                restaurant_nameText.setText(selectedRestaurant.getName());
+                restaurant_addressText.setText(selectedRestaurant.getAddress());
+            }
+        }
     }
 
     @Override
