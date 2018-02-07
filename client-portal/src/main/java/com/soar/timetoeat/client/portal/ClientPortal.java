@@ -1,9 +1,9 @@
 package com.soar.timetoeat.client.portal;
 
 import com.soar.timetoeat.client.portal.dao.AuthClient;
-import com.soar.timetoeat.client.portal.dao.MenuClient;
 import com.soar.timetoeat.client.portal.dao.RestaurantClient;
 import com.soar.timetoeat.util.domain.auth.UserRole;
+import com.soar.timetoeat.util.domain.restaurant.Restaurant;
 import com.soar.timetoeat.util.params.auth.CreateUserParams.CreateUserParamsBuilder;
 import com.soar.timetoeat.util.params.auth.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +17,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @SpringBootApplication
 @EnableFeignClients
@@ -31,11 +36,13 @@ public class ClientPortal extends JPanel implements ActionListener {
     private static JFrame frame;
     private final AuthClient authClient;
     private final RestaurantClient restaurantClient;
-    private final MenuClient menuClient;
 
     private static int frameWidth = 650;
     private static int frameHeight = 600;
     private static String token = null;
+    private static Set<Restaurant> restaurants;
+    private static String selectedRestaurantName;
+    private static Restaurant selectedRestaurant;
 
     private JTabbedPane tabbedPane;
 
@@ -50,14 +57,13 @@ public class ClientPortal extends JPanel implements ActionListener {
 
     //restaurant fields
     private JPanel homePanel;
+    private JList<String> restaurantList;
 
     @Autowired
     public ClientPortal(final AuthClient authClient,
-                        final RestaurantClient restaurantClient,
-                        final MenuClient menuClient) {
+                        final RestaurantClient restaurantClient) {
         this.authClient = authClient;
         this.restaurantClient = restaurantClient;
-        this.menuClient = menuClient;
         initWindow();
     }
 
@@ -92,6 +98,7 @@ public class ClientPortal extends JPanel implements ActionListener {
         //home
         homePanel = new JPanel();
         tabbedPane.addTab("Home", homePanel);
+        placeHomeComponents(homePanel);
         //initially, home won't be accessible
         tabbedPane.setEnabledAt(2, false);
 
@@ -159,6 +166,36 @@ public class ClientPortal extends JPanel implements ActionListener {
         panel.add(registerButton);
     }
 
+    private void placeHomeComponents(final JPanel panel) {
+        panel.setLayout(null);
+
+        JLabel detailsLabel = new JLabel("Pick a Restaurant");
+        detailsLabel.setBounds(10, 10, 200, 30);
+        detailsLabel.setFont(new Font(detailsLabel.getName(), Font.BOLD, 20));
+        panel.add(detailsLabel);
+
+//        updateHomeFields(panel);
+
+    }
+
+    private void updateHomeFields(final JPanel panel) {
+        //refresh restaurant list
+        restaurants = restaurantClient.getAllRestaurants();
+        final String[] restaurantNames = new String[restaurants.size()];
+        restaurants.stream()
+                .map(Restaurant::getName)
+                .collect(Collectors.toList())
+                .toArray(restaurantNames);
+        restaurantList = new JList<>(restaurantNames);
+        restaurantList.setBounds(10, 40, 200, 300);
+        restaurantList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                selectedRestaurantName = restaurantList.getSelectedValue();
+            }
+        });
+        panel.add(restaurantList);
+    }
+
     @Override
     public void actionPerformed(final ActionEvent e) {
         switch (e.getActionCommand()) {
@@ -184,7 +221,7 @@ public class ClientPortal extends JPanel implements ActionListener {
         if (loginResponse.getStatusCode() == HttpStatus.OK) {
             //store token locally for future http calls
             token = loginResponse.getHeaders().get("Authorization").get(0);
-
+            updateHomeFields(homePanel);
             //clear fields
             login_usernameText.setText("");
             login_passwordText.setText("");

@@ -194,7 +194,6 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         detailsLabel.setFont(new Font(detailsLabel.getName(), Font.BOLD, 20));
         panel.add(detailsLabel);
 
-
         JLabel nameLabel = new JLabel("Name");
         nameLabel.setBounds(10, 40, 80, 25);
         panel.add(nameLabel);
