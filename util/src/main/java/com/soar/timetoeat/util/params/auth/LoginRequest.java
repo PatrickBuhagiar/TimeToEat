@@ -1,4 +1,4 @@
-package com.soar.timetoeat.restaurant.portal.domain;
+package com.soar.timetoeat.util.params.auth;
 
 import java.io.Serializable;
 import java.util.Objects;

@@ -3,10 +3,10 @@ package com.soar.timetoeat.restaurant.portal;
 import com.soar.timetoeat.restaurant.portal.dao.AuthClient;
 import com.soar.timetoeat.restaurant.portal.dao.MenuClient;
 import com.soar.timetoeat.restaurant.portal.dao.RestaurantClient;
-import com.soar.timetoeat.restaurant.portal.domain.LoginRequest;
 import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
 import com.soar.timetoeat.util.domain.auth.UserRole;
+import com.soar.timetoeat.util.params.auth.LoginRequest;
 import com.soar.timetoeat.util.params.menu.CreateItemParams;
 import com.soar.timetoeat.util.params.menu.CreateItemParams.CreateItemParamsBuilder;
 import com.soar.timetoeat.util.params.menu.CreateMenuParams;
@@ -30,7 +30,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.text.NumberFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @SpringBootApplication
 @EnableFeignClients

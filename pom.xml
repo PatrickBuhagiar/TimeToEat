@@ -38,5 +38,6 @@
         <module>order</module>
         <module>auth</module>
         <module>restaurant-portal</module>
+        <module>client-portal</module>
     </modules>
 </project>
