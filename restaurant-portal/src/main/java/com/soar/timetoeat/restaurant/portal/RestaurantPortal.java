@@ -3,16 +3,17 @@ package com.soar.timetoeat.restaurant.portal;
 import com.soar.timetoeat.restaurant.portal.dao.AuthClient;
 import com.soar.timetoeat.restaurant.portal.dao.MenuClient;
 import com.soar.timetoeat.restaurant.portal.dao.RestaurantClient;
+import com.soar.timetoeat.util.domain.auth.UserRole;
 import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
-import com.soar.timetoeat.util.domain.auth.UserRole;
+import com.soar.timetoeat.util.params.auth.CreateUserParams.CreateUserParamsBuilder;
 import com.soar.timetoeat.util.params.auth.LoginRequest;
 import com.soar.timetoeat.util.params.menu.CreateItemParams;
 import com.soar.timetoeat.util.params.menu.CreateItemParams.CreateItemParamsBuilder;
 import com.soar.timetoeat.util.params.menu.CreateMenuParams;
 import com.soar.timetoeat.util.params.menu.CreateMenuParams.CreateMenuParamsBuilder;
 import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams.CreateRestaurantParamsBuilder;
-import com.soar.timetoeat.util.params.auth.CreateUserParams.CreateUserParamsBuilder;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -23,13 +24,19 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import javax.jms.*;
+import javax.jms.Queue;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
 
 @SpringBootApplication
 @EnableFeignClients
@@ -37,16 +44,16 @@ import java.util.*;
 @EnableDiscoveryClient
 public class RestaurantPortal extends JPanel implements ActionListener {
 
-    private static JFrame frame;
+    private Session session;
     private final AuthClient authClient;
     private final RestaurantClient restaurantClient;
     private final MenuClient menuClient;
 
     private static int frameWidth = 650;
     private static int frameHeight = 600;
-    private static String token = null;
-    private static Restaurant currentRestaurant;
-    private static Menu currentMenu;
+    private String token = null;
+    private Restaurant currentRestaurant;
+    private Menu currentMenu;
 
     private JTabbedPane tabbedPane;
 
@@ -75,14 +82,16 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     private JLabel menuItemLabel;
     private JLabel menuDescriptionLabel;
     private JLabel unitPriceLabel;
+    private Queue queue;
 
     @Autowired
     public RestaurantPortal(final AuthClient authClient,
                             final RestaurantClient restaurantClient,
-                            final MenuClient menuClient) {
+                            final MenuClient menuClient) throws JMSException {
         this.authClient = authClient;
         this.restaurantClient = restaurantClient;
         this.menuClient = menuClient;
+        initConnection();
         initWindow();
     }
 
@@ -91,13 +100,20 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                 .headless(false).run(args);
 
         EventQueue.invokeLater(() -> {
-            frame = new JFrame("Restaurant Portal");
+            JFrame frame = new JFrame("Restaurant Portal");
             RestaurantPortal ex = ctx.getBean(RestaurantPortal.class);
             frame.getContentPane().add(ex, BorderLayout.CENTER);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             frame.setSize(frameWidth, frameHeight);
             frame.setVisible(true);
         });
+    }
+
+    private void initConnection() throws JMSException {
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:3000");
+        Connection connection = connectionFactory.createConnection();
+        connection.start();
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     private void initWindow() {
@@ -321,7 +337,6 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                 JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
                 break;
         }
-        frame.validate();
     }
 
 
@@ -337,6 +352,15 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             currentRestaurant = restaurantClient.getRestaurantByOwner(token);
             if (!Objects.isNull(currentRestaurant)) {
                 currentMenu = menuClient.getMenu(currentRestaurant.getId());
+                if (Objects.isNull(queue)) {
+                    try {
+                        queue = session.createQueue("res-" + currentRestaurant.getId());
+                        final MessageConsumer consumer = session.createConsumer(queue);
+                        consumer.setMessageListener(new MessageListener());
+                    } catch (JMSException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
             updateRestaurantFields(restaurantPanel);
 
@@ -438,5 +462,18 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         menu_nameText.setText("");
         menu_descriptionText.setText("");
         unitPriceText.setValue(0.0);
+    }
+
+    class MessageListener implements javax.jms.MessageListener {
+
+        @Override
+        public void onMessage(final Message message) {
+            try {
+                MapMessage mapMessage = (MapMessage) message;
+                JOptionPane.showMessageDialog(null, "Received new order! " + currentRestaurant.getName() + " has order to " + mapMessage.getString("delivery address"));
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -17,7 +17,13 @@ public class RestaurantOrder implements Serializable {
     public RestaurantOrder() {
     }
 
-    public RestaurantOrder(final long id, final long restaurantId, final OrderState state, final String deliveryAddress, final Long expectedDeliveryTime, final double totalPrice, final Set<OrderItem> items) {
+    public RestaurantOrder(final long id,
+                           final long restaurantId,
+                           final OrderState state,
+                           final String deliveryAddress,
+                           final Long expectedDeliveryTime,
+                           final double totalPrice,
+                           final Set<OrderItem> items) {
         this.id = id;
         this.restaurantId = restaurantId;
         this.state = state;

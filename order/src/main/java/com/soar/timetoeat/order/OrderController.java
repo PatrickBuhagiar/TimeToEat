@@ -5,11 +5,15 @@ import com.soar.timetoeat.order.domain.RestaurantOrder;
 import com.soar.timetoeat.util.domain.order.OrderState;
 import com.soar.timetoeat.util.params.order.CreateOrderParams;
 import com.soar.timetoeat.util.params.order.UpdateOrderParams;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import javax.jms.*;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,19 +27,42 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 public class OrderController {
 
     private final OrderRepository repository;
+    private final JmsTemplate jmsTemplate;
+    private Session session;
+
+    private HashMap<Long, Queue> queueMap = new HashMap<>();
 
     @Autowired
-    public OrderController(final OrderRepository repository) {
+    public OrderController(final OrderRepository repository,
+                           final JmsTemplate jmsTemplate) throws JMSException {
         this.repository = repository;
+        this.jmsTemplate = jmsTemplate;
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:3000");
+        Connection connection = connectionFactory.createConnection();
+        connection.start();
+        this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     @RequestMapping(value = "restaurants/{restaurantId}/checkout", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<RestaurantOrder> createOrder(@PathVariable("restaurantId") final Long restaurantId,
-                                                @RequestBody final CreateOrderParams params) {
-        return getLoggedInUsername()
-                .map(username -> ResponseEntity.status(CREATED).body(repository.save(convert(restaurantId, params, username))))
-                .orElseGet(() -> ResponseEntity.status(UNAUTHORIZED).body(null));
+                                                @RequestBody final CreateOrderParams params) throws JMSException {
+
+        if (!queueMap.containsKey(restaurantId)) {
+            queueMap.put(restaurantId, session.createQueue("res-" + restaurantId));
+        }
+
+        final String s = getLoggedInUsername().get();
+        final RestaurantOrder order = repository.save(convert(restaurantId, params, s));
+        final MessageProducer producer = session.createProducer(queueMap.get(restaurantId));
+        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+
+        final MapMessage message = session.createMapMessage();
+        message.setLong("id", order.getId());
+        message.setString("delivery address", order.getDeliveryAddress());
+        producer.send(message);
+
+        return ResponseEntity.status(CREATED).body(order);
     }
 
     @RequestMapping(value = "restaurants/{restaurantId}", method = GET)

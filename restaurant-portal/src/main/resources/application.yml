@@ -1,6 +1,6 @@
 spring:
   application:
-      name: restaurant-portal
+      name: restaurant-portal-${random.int}
 server:
   port: 0
 eureka:

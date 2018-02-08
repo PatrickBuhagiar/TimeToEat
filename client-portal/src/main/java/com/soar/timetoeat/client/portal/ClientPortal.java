@@ -41,17 +41,16 @@ import java.util.stream.Collectors;
 @EnableDiscoveryClient
 public class ClientPortal extends JPanel implements ActionListener {
 
-    private static JFrame frame;
     private final AuthClient authClient;
     private final RestaurantClient restaurantClient;
     private final OrderClient orderClient;
 
     private static int frameWidth = 650;
     private static int frameHeight = 600;
-    private static String token = null;
-    private static Set<Restaurant> restaurants;
-    private static String selectedRestaurantName;
-    private static RestaurantWithMenu selectedRestaurant;
+    private String token = null;
+    private Set<Restaurant> restaurants;
+    private String selectedRestaurantName;
+    private RestaurantWithMenu selectedRestaurant;
 
     private JTabbedPane tabbedPane;
 
@@ -93,7 +92,7 @@ public class ClientPortal extends JPanel implements ActionListener {
                 .headless(false).run(args);
 
         EventQueue.invokeLater(() -> {
-            frame = new JFrame("Client Portal");
+            JFrame frame = new JFrame("Client Portal");
             ClientPortal ex = ctx.getBean(ClientPortal.class);
             frame.getContentPane().add(ex, BorderLayout.CENTER);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -324,7 +323,6 @@ public class ClientPortal extends JPanel implements ActionListener {
                 JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
                 break;
         }
-        frame.validate();
     }
 
 
@@ -384,9 +382,19 @@ public class ClientPortal extends JPanel implements ActionListener {
         final ResponseEntity<RestaurantOrder> orderResponse = orderClient.createOrder(token, selectedRestaurant.getId(), createOrderParams);
         if (orderResponse.getStatusCode() == HttpStatus.CREATED) {
             restaurantOrder = orderResponse.getBody();
+            updateOrderFields(false);
             tabbedPane.setEnabledAt(3, true);
             tabbedPane.setEnabledAt(2, false);
             tabbedPane.setSelectedIndex(3);
+        }
+    }
+
+    private void updateOrderFields(final boolean fetchOrder) {
+        if (fetchOrder) {
+            final ResponseEntity<RestaurantOrder> orderResponse = orderClient.getOrder(token, restaurantOrder.getId());
+            if (orderResponse.getStatusCode() == HttpStatus.CREATED) {
+                restaurantOrder = orderResponse.getBody();
+            }
         }
     }
 

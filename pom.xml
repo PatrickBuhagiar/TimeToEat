@@ -39,5 +39,6 @@
         <module>auth</module>
         <module>restaurant-portal</module>
         <module>client-portal</module>
+        <module>broker-service</module>
     </modules>
 </project>
