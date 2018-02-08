@@ -3,6 +3,7 @@ package com.soar.timetoeat.util.domain.restaurant;
 import com.soar.timetoeat.util.domain.menu.Menu;
 
 public class RestaurantWithMenu {
+    private Long id;
     private String name;
     private String address;
     private Menu menu;
@@ -10,7 +11,8 @@ public class RestaurantWithMenu {
     private RestaurantWithMenu() {
     }
 
-    public RestaurantWithMenu(final String name, final String address, final Menu menu) {
+    public RestaurantWithMenu(final Long id, final String name, final String address, final Menu menu) {
+        this.id = id;
         this.name = name;
         this.address = address;
         this.menu = menu;
@@ -28,5 +30,7 @@ public class RestaurantWithMenu {
         return menu;
     }
 
-
+    public Long getId() {
+        return id;
+    }
 }

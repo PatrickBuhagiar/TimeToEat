@@ -34,7 +34,7 @@ public class OrderController {
     ResponseEntity<RestaurantOrder> createOrder(@PathVariable("restaurantId") final Long restaurantId,
                                                 @RequestBody final CreateOrderParams params) {
         return getLoggedInUsername()
-                .map(username -> ResponseEntity.status(CREATED).body(repository.save(convert(restaurantId, params))))
+                .map(username -> ResponseEntity.status(CREATED).body(repository.save(convert(restaurantId, params, username))))
                 .orElseGet(() -> ResponseEntity.status(UNAUTHORIZED).body(null));
     }
 

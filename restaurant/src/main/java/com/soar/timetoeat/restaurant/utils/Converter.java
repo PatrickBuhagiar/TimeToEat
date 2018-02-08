@@ -33,6 +33,6 @@ public class Converter {
      */
     public static RestaurantWithMenu convert(final Restaurant restaurant,
                                                final Menu menu) {
-        return new RestaurantWithMenu(restaurant.getName(), restaurant.getAddress(), menu);
+        return new RestaurantWithMenu(restaurant.getId(), restaurant.getName(), restaurant.getAddress(), menu);
     }
 }

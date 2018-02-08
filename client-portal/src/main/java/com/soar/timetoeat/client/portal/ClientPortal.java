@@ -1,12 +1,20 @@
 package com.soar.timetoeat.client.portal;
 
 import com.soar.timetoeat.client.portal.dao.AuthClient;
+import com.soar.timetoeat.client.portal.dao.OrderClient;
 import com.soar.timetoeat.client.portal.dao.RestaurantClient;
 import com.soar.timetoeat.util.domain.auth.UserRole;
+import com.soar.timetoeat.util.domain.order.RestaurantOrder;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
 import com.soar.timetoeat.util.domain.restaurant.RestaurantWithMenu;
 import com.soar.timetoeat.util.params.auth.CreateUserParams.CreateUserParamsBuilder;
 import com.soar.timetoeat.util.params.auth.LoginRequest;
+import com.soar.timetoeat.util.params.menu.CreateItemParams;
+import com.soar.timetoeat.util.params.menu.CreateMenuParams;
+import com.soar.timetoeat.util.params.order.CreateOrderItemParams;
+import com.soar.timetoeat.util.params.order.CreateOrderItemParams.CreateOrderItemParamsBuilder;
+import com.soar.timetoeat.util.params.order.CreateOrderParams;
+import com.soar.timetoeat.util.params.order.CreateOrderParams.CreateOrderParamsBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -18,14 +26,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -39,6 +44,7 @@ public class ClientPortal extends JPanel implements ActionListener {
     private static JFrame frame;
     private final AuthClient authClient;
     private final RestaurantClient restaurantClient;
+    private final OrderClient orderClient;
 
     private static int frameWidth = 650;
     private static int frameHeight = 600;
@@ -66,12 +72,19 @@ public class ClientPortal extends JPanel implements ActionListener {
     private static boolean selectedAtLeastOneRestaurant = false;
     private DefaultTableModel dtm;
     private JButton createOrderButton;
+    private JTextField restaurant_deliveryAddressText;
+    private RestaurantOrder restaurantOrder;
+
+    //order fields
+    private JPanel orderPanel;
 
     @Autowired
     public ClientPortal(final AuthClient authClient,
-                        final RestaurantClient restaurantClient) {
+                        final RestaurantClient restaurantClient,
+                        final OrderClient orderClient) {
         this.authClient = authClient;
         this.restaurantClient = restaurantClient;
+        this.orderClient = orderClient;
         initWindow();
     }
 
@@ -109,6 +122,11 @@ public class ClientPortal extends JPanel implements ActionListener {
         placeHomeComponents(homePanel);
         //initially, home won't be accessible
         tabbedPane.setEnabledAt(2, false);
+
+        //order
+        orderPanel = new JPanel();
+        tabbedPane.addTab("Order", orderPanel);
+        tabbedPane.setEnabledAt(3, false);
 
         //Add tabbed pane to panel
         setLayout(new GridLayout(1, 1));
@@ -265,6 +283,15 @@ public class ClientPortal extends JPanel implements ActionListener {
                     createOrderButton.addActionListener(this);
                     panel.add(createOrderButton);
 
+                    //Add Address field
+                    JLabel deliveryAddressLabel = new JLabel("Delivery Address");
+                    deliveryAddressLabel.setBounds(10, 450, 130, 25);
+                    panel.add(deliveryAddressLabel);
+
+                    restaurant_deliveryAddressText = new JTextField(30);
+                    restaurant_deliveryAddressText.setBounds(150, 450, 160, 25);
+                    panel.add(restaurant_deliveryAddressText);
+
                     panel.revalidate();
                     panel.repaint();
                 }
@@ -353,7 +380,37 @@ public class ClientPortal extends JPanel implements ActionListener {
      * Create an order
      */
     private void createOrder() {
-
+        final CreateOrderParams createOrderParams = extractOrderParamsFromTable();
+        final ResponseEntity<RestaurantOrder> orderResponse = orderClient.createOrder(token, selectedRestaurant.getId(), createOrderParams);
+        if (orderResponse.getStatusCode() == HttpStatus.CREATED) {
+            restaurantOrder = orderResponse.getBody();
+            tabbedPane.setEnabledAt(3, true);
+            tabbedPane.setEnabledAt(2, false);
+            tabbedPane.setSelectedIndex(3);
+        }
     }
 
+    private CreateOrderParams extractOrderParamsFromTable(){
+        Set<CreateOrderItemParams> itemParams = new HashSet<>();
+        final Object[][] tableData = new Object[dtm.getRowCount()][dtm.getColumnCount()];
+        for (int i = 0; i < dtm.getRowCount(); i++) {
+            for (int j = 0; j < dtm.getColumnCount(); j++) {
+                tableData[i][j] = dtm.getValueAt(i,j);
+            }
+
+            final CreateOrderItemParams params = CreateOrderItemParamsBuilder.aCreateOrderItemParams()
+                    .withName(tableData[i][0].toString())
+                    .withUnitPrice(Double.valueOf(tableData[i][2].toString()))
+                    .withQuantity(Integer.valueOf(tableData[i][3].toString()))
+                    .build();
+            if (params.getQuantity() != 0) {
+                itemParams.add(params);
+            }
+        }
+
+        return CreateOrderParamsBuilder.aCreateOrderParams()
+                .withItems(itemParams)
+                .withDeliveryAddress(restaurant_deliveryAddressText.getText())
+                .build();
+    }
 }

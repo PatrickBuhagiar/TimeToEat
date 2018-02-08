@@ -83,10 +83,6 @@ public class RestaurantOrder implements Serializable {
         this.state = state;
     }
 
-    public void setClientUsername(final String clientUsername) {
-        this.clientUsername = clientUsername;
-    }
-
     public void setRestaurantUsername(final String restaurantUsername) {
         this.restaurantUsername = restaurantUsername;
     }
@@ -120,6 +116,7 @@ public class RestaurantOrder implements Serializable {
         private String deliveryAddress;
         private Long expectedDeliveryTime;
         private Set<OrderItem> items = new HashSet<>();
+        private String clientUsername;
 
         private OrderBuilder() {
         }
@@ -150,6 +147,11 @@ public class RestaurantOrder implements Serializable {
 
         public OrderBuilder withItems(Set<OrderItem> items) {
             this.items = items;
+            return this;
+        }
+
+        public OrderBuilder withClientUsername(String clientUsername) {
+            this.clientUsername = clientUsername;
             return this;
         }
 

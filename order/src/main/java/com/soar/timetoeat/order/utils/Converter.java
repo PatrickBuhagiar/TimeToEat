@@ -16,13 +16,15 @@ public class Converter {
     /**
      * Convert from {@link CreateOrderParams} to {@link RestaurantOrder}
      * @param params the create order params
+     * @param username
      * @return the converted RestaurantOrder
      */
-    public static RestaurantOrder convert(final long restaurantId, final CreateOrderParams params) {
+    public static RestaurantOrder convert(final long restaurantId, final CreateOrderParams params, final String username) {
         return RestaurantOrder.OrderBuilder.anOrder()
                 .withDeliveryAddress(params.getDeliveryAddress())
                 .withRestaurantId(restaurantId)
                 .withState(OrderState.W)
+                .withClientUsername(username)
                 .withItems(params.getItems()
                         .stream()
                         .map(Converter::convert)
