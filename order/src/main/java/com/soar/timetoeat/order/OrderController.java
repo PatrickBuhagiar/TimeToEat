@@ -71,8 +71,6 @@ public class OrderController {
         } else {
             return ResponseEntity.status(UNAUTHORIZED).body(null);
         }
-
-
     }
 
     @RequestMapping(value = "orders/restaurant", method = GET)

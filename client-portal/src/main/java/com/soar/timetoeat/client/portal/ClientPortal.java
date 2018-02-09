@@ -28,7 +28,9 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -47,7 +49,7 @@ public class ClientPortal extends JPanel implements ActionListener {
     private static int frameHeight = 600;
     private String token = null;
     private Set<Restaurant> restaurants;
-    private Set<RestaurantOrder> orderHistory;
+    private List<RestaurantOrder> orderHistory;
     private String selectedRestaurantName;
     private RestaurantWithMenu selectedRestaurant;
 
@@ -124,7 +126,7 @@ public class ClientPortal extends JPanel implements ActionListener {
 
         //order
         orderPanel = new JPanel();
-        tabbedPane.addTab("Order", orderPanel);
+        tabbedPane.addTab("Order History", orderPanel);
         placeOrderComponents(orderPanel);
         tabbedPane.setEnabledAt(3, false);
 
@@ -419,17 +421,8 @@ public class ClientPortal extends JPanel implements ActionListener {
         }
     }
 
-    private void updateOrderFields(final boolean fetchOrder) {
-        if (fetchOrder) {
-            final ResponseEntity<RestaurantOrder> orderResponse = orderClient.getOrder(token, currentOrder.getId());
-            if (orderResponse.getStatusCode() == HttpStatus.CREATED) {
-                currentOrder = orderResponse.getBody();
-            }
-        }
-    }
-
     private void updateOrderHistory() {
-        orderHistory = orderClient.getClientOrders(token);
+        orderHistory = orderClient.getClientOrders(token).stream().sorted(Comparator.comparingLong(RestaurantOrder::getId).reversed()).collect(Collectors.toList());
         populateOrderHistoryTableFromOrderHistory();
     }
 

@@ -345,7 +345,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                 addToMenu();
                 break;
             default:
-                JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
+                JOptionPane.showMessageDialog(frame, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
                 break;
         }
     }
@@ -378,7 +378,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             //switch to home tab
             tabbedPane.setSelectedIndex(2);
         } else {
-            JOptionPane.showMessageDialog(null, "Wrong Username and Password");
+            JOptionPane.showMessageDialog(frame, "Wrong Username and Password");
         }
     }
 
@@ -416,7 +416,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             //navigate to login
             tabbedPane.setSelectedIndex(0);
         } else {
-            JOptionPane.showMessageDialog(null, "Oops, Something went wrong!");
+            JOptionPane.showMessageDialog(frame, "Oops, Something went wrong!");
         }
     }
 
@@ -439,7 +439,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                 initialiseOrderQueue();
                 updateRestaurantFields(restaurantPanel);
             } else {
-                JOptionPane.showMessageDialog(null, "failed to create Restaurant!");
+                JOptionPane.showMessageDialog(frame, "failed to create Restaurant!");
             }
         }
     }
@@ -488,26 +488,19 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         public void onMessage(final Message message) {
             try {
                 MapMessage mapMessage = (MapMessage) message;
-                JOptionPane pane = new JOptionPane("New Order to " + mapMessage.getString("address") + " for £" + mapMessage.getDouble("total") + ". Accept order?", JOptionPane.QUESTION_MESSAGE, YES_NO_OPTION);
-                JDialog dialog = pane.createDialog("New Order");
-                dialog.setVisible(true);
-
-                final Object selectedValue = pane.getValue();
-                if (selectedValue instanceof Integer) {
-                    final int select = (Integer) selectedValue;
-                    if (select == YES_OPTION) {
-                        Object[] possibilities = {"15", "30", "45", "60", "75", "90"};
-                        final String time = (String) JOptionPane.showInputDialog(frame, "I will deliver in:", "Delivery time", JOptionPane.PLAIN_MESSAGE, null, possibilities, "15");
-                        final long expectedTimeOfDelivery = System.currentTimeMillis() + (Long.valueOf(time) * ONE_MINUTE_IN_MILLIS);
-                        orderClient.updateOrder(token, mapMessage.getLong("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
-                                .withExpectedDeliveryTime(expectedTimeOfDelivery)
-                                .withState(OrderState.ACCEPTED)
-                                .build());
-                    } else if (select == NO_OPTION) {
-                        orderClient.updateOrder(token, mapMessage.getLong("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
-                                .withState(OrderState.DECLINED)
-                                .build());
-                    }
+                final int select = JOptionPane.showConfirmDialog(frame, "`New Order to " + mapMessage.getString("address") + " for £" + mapMessage.getDouble("total") + ". Accept order?", "New Order", YES_NO_OPTION);
+                if (select == YES_OPTION) {
+                    Object[] possibilities = {"15", "30", "45", "60", "75", "90"};
+                    final String time = (String) JOptionPane.showInputDialog(frame, "I will deliver in (minutes):", "Delivery time", JOptionPane.PLAIN_MESSAGE, null, possibilities, "15");
+                    final long expectedTimeOfDelivery = System.currentTimeMillis() + (Long.valueOf(time) * ONE_MINUTE_IN_MILLIS);
+                    orderClient.updateOrder(token, mapMessage.getLong("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
+                            .withExpectedDeliveryTime(expectedTimeOfDelivery)
+                            .withState(OrderState.ACCEPTED)
+                            .build());
+                } else if (select == NO_OPTION) {
+                    orderClient.updateOrder(token, mapMessage.getLong("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
+                            .withState(OrderState.DECLINED)
+                            .build());
                 }
             } catch (JMSException e) {
                 e.printStackTrace();
