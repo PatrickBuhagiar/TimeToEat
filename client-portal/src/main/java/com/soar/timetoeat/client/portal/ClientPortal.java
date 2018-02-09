@@ -320,7 +320,7 @@ public class ClientPortal extends JPanel implements ActionListener {
                 createOrder();
                 break;
             default:
-                JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
+                JOptionPane.showMessageDialog(null, "ACCEPTED confused button click. What Do I do with " + e.getActionCommand() + "?");
                 break;
         }
     }

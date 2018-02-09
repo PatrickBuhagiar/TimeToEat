@@ -2,12 +2,11 @@ package com.soar.timetoeat.util.domain.order;
 
 public enum OrderState {
 
-    W("Awaiting Approval"),
-    A("Accepted"),
-    D("Declined"),
-    P("Under Preparation"),
-    O("On the Way"),
-    V("Delivered");
+    AWAIT_APPROVAL("Awaiting Approval"),
+    ACCEPTED("Accepted"),
+    DECLINED("Declined"),
+    ON_THE_WAY("On the Way"),
+    DELIVERED("Delivered");
 
     private final String description;
 

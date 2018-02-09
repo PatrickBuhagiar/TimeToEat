@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * A utility class for performing conversions between classes
+ * ACCEPTED utility class for performing conversions between classes
  */
 public class Converter {
 
@@ -25,7 +25,7 @@ public class Converter {
         return RestaurantOrder.OrderBuilder.anOrder()
                 .withDeliveryAddress(params.getDeliveryAddress())
                 .withRestaurantId(restaurantId)
-                .withState(OrderState.W)
+                .withState(OrderState.AWAIT_APPROVAL)
                 .withClientUsername(username)
                 .withItems(params.getItems()
                         .stream()

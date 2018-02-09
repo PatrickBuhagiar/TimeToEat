@@ -2,9 +2,11 @@ package com.soar.timetoeat.restaurant.portal;
 
 import com.soar.timetoeat.restaurant.portal.dao.AuthClient;
 import com.soar.timetoeat.restaurant.portal.dao.MenuClient;
+import com.soar.timetoeat.restaurant.portal.dao.OrderClient;
 import com.soar.timetoeat.restaurant.portal.dao.RestaurantClient;
 import com.soar.timetoeat.util.domain.auth.UserRole;
 import com.soar.timetoeat.util.domain.menu.Menu;
+import com.soar.timetoeat.util.domain.order.OrderState;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
 import com.soar.timetoeat.util.params.auth.CreateUserParams.CreateUserParamsBuilder;
 import com.soar.timetoeat.util.params.auth.LoginRequest;
@@ -12,6 +14,7 @@ import com.soar.timetoeat.util.params.menu.CreateItemParams;
 import com.soar.timetoeat.util.params.menu.CreateItemParams.CreateItemParamsBuilder;
 import com.soar.timetoeat.util.params.menu.CreateMenuParams;
 import com.soar.timetoeat.util.params.menu.CreateMenuParams.CreateMenuParamsBuilder;
+import com.soar.timetoeat.util.params.order.UpdateOrderParams.UpdateOrderParamsBuilder;
 import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams.CreateRestaurantParamsBuilder;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,16 +41,22 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
+import static javax.swing.JOptionPane.NO_OPTION;
+import static javax.swing.JOptionPane.YES_NO_OPTION;
+import static javax.swing.JOptionPane.YES_OPTION;
+
 @SpringBootApplication
 @EnableFeignClients
 @EnableEurekaClient
 @EnableDiscoveryClient
 public class RestaurantPortal extends JPanel implements ActionListener {
 
+    private static JFrame frame;
     private Session session;
     private final AuthClient authClient;
     private final RestaurantClient restaurantClient;
     private final MenuClient menuClient;
+    private final OrderClient orderClient;
 
     private static int frameWidth = 650;
     private static int frameHeight = 600;
@@ -84,13 +93,17 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     private JLabel unitPriceLabel;
     private Queue queue;
 
+    static final long ONE_MINUTE_IN_MILLIS=60000;
+
     @Autowired
     public RestaurantPortal(final AuthClient authClient,
                             final RestaurantClient restaurantClient,
-                            final MenuClient menuClient) throws JMSException {
+                            final MenuClient menuClient,
+                            final OrderClient orderClient) throws JMSException {
         this.authClient = authClient;
         this.restaurantClient = restaurantClient;
         this.menuClient = menuClient;
+        this.orderClient = orderClient;
         initConnection();
         initWindow();
     }
@@ -100,7 +113,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                 .headless(false).run(args);
 
         EventQueue.invokeLater(() -> {
-            JFrame frame = new JFrame("Restaurant Portal");
+            frame = new JFrame("Restaurant Portal");
             RestaurantPortal ex = ctx.getBean(RestaurantPortal.class);
             frame.getContentPane().add(ex, BorderLayout.CENTER);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -334,7 +347,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                 addToMenu();
                 break;
             default:
-                JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
+                JOptionPane.showMessageDialog(null, "ACCEPTED confused button click. What Do I do with " + e.getActionCommand() + "?");
                 break;
         }
     }
@@ -352,15 +365,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             currentRestaurant = restaurantClient.getRestaurantByOwner(token);
             if (!Objects.isNull(currentRestaurant)) {
                 currentMenu = menuClient.getMenu(currentRestaurant.getId());
-                if (Objects.isNull(queue)) {
-                    try {
-                        queue = session.createQueue("res-" + currentRestaurant.getId());
-                        final MessageConsumer consumer = session.createConsumer(queue);
-                        consumer.setMessageListener(new MessageListener());
-                    } catch (JMSException e) {
-                        e.printStackTrace();
-                    }
-                }
+                initialiseOrderQueue();
             }
             updateRestaurantFields(restaurantPanel);
 
@@ -377,6 +382,21 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             tabbedPane.setSelectedIndex(2);
         } else {
             JOptionPane.showMessageDialog(null, "Wrong Username and Password");
+        }
+    }
+
+    /**
+     * Create a Queue for receiving orders
+     */
+    private void initialiseOrderQueue() {
+        if (Objects.isNull(queue)) {
+            try {
+                queue = session.createQueue("res-" + currentRestaurant.getId());
+                final MessageConsumer consumer = session.createConsumer(queue);
+                consumer.setMessageListener(new MessageListener());
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -419,6 +439,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
 
                 currentRestaurant = restaurant;
                 currentMenu = menu;
+                initialiseOrderQueue();
                 updateRestaurantFields(restaurantPanel);
             } else {
                 JOptionPane.showMessageDialog(null, "failed to create Restaurant!");
@@ -470,7 +491,27 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         public void onMessage(final Message message) {
             try {
                 MapMessage mapMessage = (MapMessage) message;
-                JOptionPane.showMessageDialog(null, "Received new order! " + currentRestaurant.getName() + " has order to " + mapMessage.getString("delivery address"));
+                JOptionPane pane = new JOptionPane("New Order to " + mapMessage.getString("address") + " for £" + mapMessage.getDouble("total") + ". Accept order?", JOptionPane.QUESTION_MESSAGE, YES_NO_OPTION);
+                JDialog dialog = pane.createDialog("New Order");
+                dialog.setVisible(true);
+
+                final Object selectedValue = pane.getValue();
+                if (selectedValue instanceof Integer) {
+                    final int select = (Integer) selectedValue;
+                    if (select == YES_OPTION) {
+                        Object[] possibilities = {"15", "30", "45", "60", "75", "90"};
+                        final String time = (String) JOptionPane.showInputDialog(frame, "I will deliver in:", "Delivery time", JOptionPane.PLAIN_MESSAGE, null, possibilities, "15");
+                        final long expectedTimeOfDelivery = System.currentTimeMillis() + (Long.valueOf(time) * ONE_MINUTE_IN_MILLIS);
+                        orderClient.updateOrder(token, mapMessage.getLong("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
+                                .withExpectedDeliveryTime(expectedTimeOfDelivery)
+                                .withState(OrderState.ACCEPTED)
+                                .build());
+                    } else if (select == NO_OPTION) {
+                        orderClient.updateOrder(token, mapMessage.getLong("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
+                                .withState(OrderState.DECLINED)
+                                .build());
+                    }
+                }
             } catch (JMSException e) {
                 e.printStackTrace();
             }

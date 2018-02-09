@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.soar.timetoeat.order.utils.Converter.convert;
+import static com.soar.timetoeat.order.utils.Converter.convertForMessage;
 import static com.soar.timetoeat.util.security.Authorisation.getLoggedInUsername;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -47,25 +48,33 @@ public class OrderController {
     public @ResponseBody
     ResponseEntity<RestaurantOrder> createOrder(@PathVariable("restaurantId") final Long restaurantId,
                                                 @RequestBody final CreateOrderParams params) throws JMSException {
-
+        //We are creating a queue per restaurant. Create a new one if not already created
         if (!queueMap.containsKey(restaurantId)) {
             queueMap.put(restaurantId, session.createQueue("res-" + restaurantId));
         }
 
-        final String s = getLoggedInUsername().get();
-        final RestaurantOrder order = repository.save(convert(restaurantId, params, s));
-        final MessageProducer producer = session.createProducer(queueMap.get(restaurantId));
-        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        if (getLoggedInUsername().isPresent()) {
+            final String username = getLoggedInUsername().get();
+            final RestaurantOrder order = repository.save(convert(restaurantId, params, username));
+            //Send Message to Restaurant Queue
+            final MessageProducer producer = session.createProducer(queueMap.get(restaurantId));
+            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
-        final MapMessage message = session.createMapMessage();
-        message.setLong("id", order.getId());
-        message.setString("delivery address", order.getDeliveryAddress());
-        producer.send(message);
+            final MapMessage message = session.createMapMessage();
+            message.setLong("id", order.getId());
+            message.setString("address", order.getDeliveryAddress());
+            message.setDouble("total", order.getTotalPrice());
+            producer.send(message);
 
-        return ResponseEntity.status(CREATED).body(order);
+            return ResponseEntity.status(CREATED).body(order);
+        } else {
+            return ResponseEntity.status(UNAUTHORIZED).body(null);
+        }
+
+
     }
 
-    @RequestMapping(value = "restaurants/{restaurantId}", method = GET)
+    @RequestMapping(value = "orders", method = GET)
     public @ResponseBody
     List<RestaurantOrder> getRestaurantOrders() {
         return repository.findByRestaurantUsername(getLoggedInUsername().get());
@@ -81,7 +90,7 @@ public class OrderController {
         }
         final String loggedInRestaurantUsername = getLoggedInUsername().get();
         //Case when order gets approved for the first time, we set the restaurant username
-        if (order.getState().equals(OrderState.W) && !params.getState().equals(OrderState.D)) {
+        if (order.getState().equals(OrderState.AWAIT_APPROVAL) && !params.getState().equals(OrderState.DECLINED)) {
             order.setRestaurantUsername(loggedInRestaurantUsername);
         }
         if (!Objects.isNull(order.getRestaurantUsername())
