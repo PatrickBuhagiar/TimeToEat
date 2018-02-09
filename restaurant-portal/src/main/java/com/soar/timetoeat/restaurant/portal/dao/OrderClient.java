@@ -6,7 +6,7 @@ import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Set;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -14,9 +14,9 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @FeignClient("ORDER-SERVICE")
 public interface OrderClient {
 
-    @RequestMapping(value = "orders", method = GET)
+    @RequestMapping(value = "orders/restaurant", method = GET)
     @ResponseBody
-    List<RestaurantOrder> getRestaurantOrders(@RequestHeader("Authorization") String token);
+    Set<RestaurantOrder> getRestaurantOrders(@RequestHeader("Authorization") String token);
 
     @RequestMapping(value = "orders/{orderId}", method = POST)
     @ResponseBody

@@ -41,9 +41,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
-import static javax.swing.JOptionPane.NO_OPTION;
-import static javax.swing.JOptionPane.YES_NO_OPTION;
-import static javax.swing.JOptionPane.YES_OPTION;
+import static javax.swing.JOptionPane.*;
 
 @SpringBootApplication
 @EnableFeignClients
@@ -93,7 +91,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     private JLabel unitPriceLabel;
     private Queue queue;
 
-    static final long ONE_MINUTE_IN_MILLIS=60000;
+    private static final long ONE_MINUTE_IN_MILLIS = 60000;
 
     @Autowired
     public RestaurantPortal(final AuthClient authClient,
@@ -236,7 +234,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         panel.add(addressLabel);
 
         restaurant_addressText = new JTextField(30);
-        restaurant_addressText.setBounds(100 , 70 , 160, 25);
+        restaurant_addressText.setBounds(100, 70, 160, 25);
         panel.add(restaurant_addressText);
 
         //Add menu table
@@ -247,7 +245,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
 
         String[] columnNames = new String[]{"Name", "Description", "UnitPrice"};
         JTable menuTable = new JTable();
-        dtm = new DefaultTableModel(0,0);
+        dtm = new DefaultTableModel(0, 0);
         dtm.setColumnIdentifiers(columnNames);
         menuTable.setModel(dtm);
         final JScrollPane menuScrollPane = new JScrollPane(menuTable);
@@ -265,7 +263,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         panel.add(menuItemLabel);
 
         menu_nameText = new JTextField(30);
-        menu_nameText.setBounds(100 , 130 , 160, 25);
+        menu_nameText.setBounds(100, 130, 160, 25);
         panel.add(menu_nameText);
 
         menuDescriptionLabel = new JLabel("Description");
@@ -273,7 +271,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         panel.add(menuDescriptionLabel);
 
         menu_descriptionText = new JTextField(30);
-        menu_descriptionText.setBounds(100 , 160 , 160, 25);
+        menu_descriptionText.setBounds(100, 160, 160, 25);
         panel.add(menu_descriptionText);
 
         unitPriceLabel = new JLabel("Unit Price");
@@ -293,7 +291,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         panel.add(unitPriceText);
 
         addToMenuButton = new JButton("add to menu");
-        addToMenuButton.setBounds(100, 220 ,160, 25);
+        addToMenuButton.setBounds(100, 220, 160, 25);
         addToMenuButton.addActionListener(this);
         panel.add(addToMenuButton);
 
@@ -347,11 +345,10 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                 addToMenu();
                 break;
             default:
-                JOptionPane.showMessageDialog(null, "ACCEPTED confused button click. What Do I do with " + e.getActionCommand() + "?");
+                JOptionPane.showMessageDialog(null, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
                 break;
         }
     }
-
 
     /**
      * Perform a login
@@ -391,7 +388,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     private void initialiseOrderQueue() {
         if (Objects.isNull(queue)) {
             try {
-                queue = session.createQueue("res-" + currentRestaurant.getId());
+                queue = session.createQueue("res-" + currentRestaurant.getName());
                 final MessageConsumer consumer = session.createConsumer(queue);
                 consumer.setMessageListener(new MessageListener());
             } catch (JMSException e) {
@@ -447,12 +444,12 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         }
     }
 
-    private CreateMenuParams extractMenuParamsFromTable(){
+    private CreateMenuParams extractMenuParamsFromTable() {
         Set<CreateItemParams> itemParams = new HashSet<>();
         final Object[][] tableData = new Object[dtm.getRowCount()][dtm.getColumnCount()];
         for (int i = 0; i < dtm.getRowCount(); i++) {
             for (int j = 0; j < dtm.getColumnCount(); j++) {
-                tableData[i][j] = dtm.getValueAt(i,j);
+                tableData[i][j] = dtm.getValueAt(i, j);
             }
 
             final CreateItemParams params = CreateItemParamsBuilder.aCreateItemParams()

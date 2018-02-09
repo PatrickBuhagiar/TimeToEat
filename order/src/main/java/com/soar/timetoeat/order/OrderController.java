@@ -16,6 +16,7 @@ import javax.jms.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static com.soar.timetoeat.order.utils.Converter.convert;
 import static com.soar.timetoeat.order.utils.Converter.convertForMessage;
@@ -31,7 +32,7 @@ public class OrderController {
     private final JmsTemplate jmsTemplate;
     private Session session;
 
-    private HashMap<Long, Queue> queueMap = new HashMap<>();
+    private HashMap<String, Queue> queueMap = new HashMap<>();
 
     @Autowired
     public OrderController(final OrderRepository repository,
@@ -44,20 +45,20 @@ public class OrderController {
         this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
-    @RequestMapping(value = "restaurants/{restaurantId}/checkout", method = RequestMethod.POST)
+    @RequestMapping(value = "restaurants/{restaurantName}/checkout", method = RequestMethod.POST)
     public @ResponseBody
-    ResponseEntity<RestaurantOrder> createOrder(@PathVariable("restaurantId") final Long restaurantId,
+    ResponseEntity<RestaurantOrder> createOrder(@PathVariable("restaurantName") final String restaurantName,
                                                 @RequestBody final CreateOrderParams params) throws JMSException {
         //We are creating a queue per restaurant. Create a new one if not already created
-        if (!queueMap.containsKey(restaurantId)) {
-            queueMap.put(restaurantId, session.createQueue("res-" + restaurantId));
+        if (!queueMap.containsKey(restaurantName)) {
+            queueMap.put(restaurantName, session.createQueue("res-" + restaurantName));
         }
 
         if (getLoggedInUsername().isPresent()) {
             final String username = getLoggedInUsername().get();
-            final RestaurantOrder order = repository.save(convert(restaurantId, params, username));
+            final RestaurantOrder order = repository.save(convert(restaurantName, params, username));
             //Send Message to Restaurant Queue
-            final MessageProducer producer = session.createProducer(queueMap.get(restaurantId));
+            final MessageProducer producer = session.createProducer(queueMap.get(restaurantName));
             producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
             final MapMessage message = session.createMapMessage();
@@ -74,10 +75,16 @@ public class OrderController {
 
     }
 
-    @RequestMapping(value = "orders", method = GET)
+    @RequestMapping(value = "orders/restaurant", method = GET)
     public @ResponseBody
-    List<RestaurantOrder> getRestaurantOrders() {
+    Set<RestaurantOrder> getRestaurantOrders() {
         return repository.findByRestaurantUsername(getLoggedInUsername().get());
+    }
+
+    @RequestMapping(value = "orders/client", method = GET)
+    public @ResponseBody
+    Set<RestaurantOrder> getClientOrders() {
+        return repository.findByClientUsername(getLoggedInUsername().get());
     }
 
     @RequestMapping(value = "orders/{orderId}", method = POST)

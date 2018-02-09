@@ -5,7 +5,7 @@ import com.soar.timetoeat.auth.domain.User;
 import com.soar.timetoeat.auth.domain.User.UserBuilder;
 
 /**
- * ACCEPTED utility class for performing conversions between classes
+ * A utility class for performing conversions between classes
  */
 public class Converter {
 

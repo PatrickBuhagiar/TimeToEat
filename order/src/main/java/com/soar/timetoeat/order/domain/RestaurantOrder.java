@@ -14,7 +14,7 @@ public class RestaurantOrder implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
-    private long restaurantId;
+    private String restaurantName;
     private OrderState state;
     private String deliveryAddress;
     private Long expectedDeliveryTime;
@@ -29,11 +29,12 @@ public class RestaurantOrder implements Serializable {
 
     private RestaurantOrder(final OrderBuilder builder) {
         this.items = builder.items;
-        this.restaurantId = builder.restaurantId;
+        this.restaurantName = builder.restaurantName;
         this.state = builder.state;
         this.expectedDeliveryTime = builder.expectedDeliveryTime;
         this.totalPrice = calculateTotalPrice(this.items);
         this.deliveryAddress = builder.deliveryAddress;
+        this.clientUsername = builder.clientUsername;
     }
 
     private double calculateTotalPrice(final Set<OrderItem> items)  {
@@ -47,8 +48,8 @@ public class RestaurantOrder implements Serializable {
         return id;
     }
 
-    public long getRestaurantId() {
-        return restaurantId;
+    public String getRestaurantName() {
+        return restaurantName;
     }
 
     public OrderState getState() {
@@ -97,7 +98,7 @@ public class RestaurantOrder implements Serializable {
         if (!(o instanceof RestaurantOrder)) return false;
         final RestaurantOrder order = (RestaurantOrder) o;
         return getId() == order.getId() &&
-                getRestaurantId() == order.getRestaurantId() &&
+                getRestaurantName() == order.getRestaurantName() &&
                 Double.compare(order.getTotalPrice(), getTotalPrice()) == 0 &&
                 getState() == order.getState() &&
                 Objects.equals(getDeliveryAddress(), order.getDeliveryAddress()) &&
@@ -107,11 +108,11 @@ public class RestaurantOrder implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getRestaurantId(), getState(), getDeliveryAddress(), getExpectedDeliveryTime(), getTotalPrice(), getItems());
+        return Objects.hash(getId(), getRestaurantName(), getState(), getDeliveryAddress(), getExpectedDeliveryTime(), getTotalPrice(), getItems());
     }
 
     public static final class OrderBuilder {
-        private long restaurantId;
+        private String restaurantName;
         private OrderState state;
         private String deliveryAddress;
         private Long expectedDeliveryTime;
@@ -125,8 +126,8 @@ public class RestaurantOrder implements Serializable {
             return new OrderBuilder();
         }
 
-        public OrderBuilder withRestaurantId(long restaurantId) {
-            this.restaurantId = restaurantId;
+        public OrderBuilder withRestaurantName(String restaurantName) {
+            this.restaurantName = restaurantName;
             return this;
         }
 

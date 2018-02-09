@@ -7,7 +7,7 @@ import java.util.Set;
 
 public class RestaurantOrder implements Serializable {
     private long id;
-    private long restaurantId;
+    private String restaurantName;
     private OrderState state;
     private String deliveryAddress;
     private Long expectedDeliveryTime;
@@ -18,14 +18,14 @@ public class RestaurantOrder implements Serializable {
     }
 
     public RestaurantOrder(final long id,
-                           final long restaurantId,
+                           final String restaurantName,
                            final OrderState state,
                            final String deliveryAddress,
                            final Long expectedDeliveryTime,
                            final double totalPrice,
                            final Set<OrderItem> items) {
         this.id = id;
-        this.restaurantId = restaurantId;
+        this.restaurantName = restaurantName;
         this.state = state;
         this.deliveryAddress = deliveryAddress;
         this.expectedDeliveryTime = expectedDeliveryTime;
@@ -37,8 +37,8 @@ public class RestaurantOrder implements Serializable {
         return id;
     }
 
-    public long getRestaurantId() {
-        return restaurantId;
+    public String getRestaurantName() {
+        return restaurantName;
     }
 
     public OrderState getState() {
@@ -67,7 +67,7 @@ public class RestaurantOrder implements Serializable {
         if (!(o instanceof RestaurantOrder)) return false;
         final RestaurantOrder that = (RestaurantOrder) o;
         return getId() == that.getId() &&
-                getRestaurantId() == that.getRestaurantId() &&
+                getRestaurantName() == that.getRestaurantName() &&
                 Double.compare(that.getTotalPrice(), getTotalPrice()) == 0 &&
                 getState() == that.getState() &&
                 Objects.equals(getDeliveryAddress(), that.getDeliveryAddress()) &&
@@ -77,6 +77,12 @@ public class RestaurantOrder implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getRestaurantId(), getState(), getDeliveryAddress(), getExpectedDeliveryTime(), getTotalPrice(), getItems());
+        return Objects.hash(getId(), getRestaurantName(), getState(), getDeliveryAddress(), getExpectedDeliveryTime(), getTotalPrice(), getItems());
+    }
+
+    public String itemsAsString() {
+        final StringBuilder stringBuilder = new StringBuilder();
+        items.forEach(item -> stringBuilder.append(item.toString()));
+        return stringBuilder.toString();
     }
 }

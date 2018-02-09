@@ -9,7 +9,7 @@ import com.soar.timetoeat.util.params.menu.CreateMenuParams;
 import java.util.stream.Collectors;
 
 /**
- * ACCEPTED utility class for performing conversions between classes
+ * A utility class for performing conversions between classes
  */
 public class Converter {
 

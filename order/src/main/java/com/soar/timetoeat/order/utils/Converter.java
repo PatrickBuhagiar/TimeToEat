@@ -1,8 +1,8 @@
 package com.soar.timetoeat.order.utils;
 
-import com.soar.timetoeat.util.domain.order.OrderState;
-import com.soar.timetoeat.order.domain.RestaurantOrder;
 import com.soar.timetoeat.order.domain.OrderItem;
+import com.soar.timetoeat.order.domain.RestaurantOrder;
+import com.soar.timetoeat.util.domain.order.OrderState;
 import com.soar.timetoeat.util.params.order.CreateOrderItemParams;
 import com.soar.timetoeat.util.params.order.CreateOrderParams;
 
@@ -10,23 +10,25 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * ACCEPTED utility class for performing conversions between classes
+ * utility class for performing conversions between classes
  */
 public class Converter {
 
     /**
      * Convert from {@link CreateOrderParams} to {@link RestaurantOrder}
      *
-     * @param params   the create order params
-     * @param username
+     * @param params         the create order params
+     * @param clientUsername the client's username
      * @return the converted RestaurantOrder
      */
-    public static RestaurantOrder convert(final long restaurantId, final CreateOrderParams params, final String username) {
+    public static RestaurantOrder convert(final String restaurantName,
+                                          final CreateOrderParams params,
+                                          final String clientUsername) {
         return RestaurantOrder.OrderBuilder.anOrder()
                 .withDeliveryAddress(params.getDeliveryAddress())
-                .withRestaurantId(restaurantId)
+                .withRestaurantName(restaurantName)
                 .withState(OrderState.AWAIT_APPROVAL)
-                .withClientUsername(username)
+                .withClientUsername(clientUsername)
                 .withItems(params.getItems()
                         .stream()
                         .map(Converter::convert)
@@ -57,7 +59,7 @@ public class Converter {
      */
     public static com.soar.timetoeat.util.domain.order.RestaurantOrder convertForMessage(final RestaurantOrder order) {
         return new com.soar.timetoeat.util.domain.order.RestaurantOrder(order.getId(),
-                order.getRestaurantId(),
+                order.getRestaurantName(),
                 order.getState(),
                 order.getDeliveryAddress(),
                 order.getExpectedDeliveryTime(),

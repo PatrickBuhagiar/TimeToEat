@@ -6,7 +6,7 @@ import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams;
 import com.soar.timetoeat.restaurant.domain.Restaurant;
 
 /**
- * ACCEPTED utility class for performing conversions between classes
+ * A utility class for performing conversions between classes
  */
 public class Converter {
 

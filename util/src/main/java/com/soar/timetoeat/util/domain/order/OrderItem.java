@@ -44,4 +44,9 @@ public class OrderItem implements Serializable {
 
         return Objects.hash(getName(), getQuantity(), getUnitPrice());
     }
+
+    @Override
+    public String toString() {
+        return  name + " x " + quantity + ", ";
+    }
 }
