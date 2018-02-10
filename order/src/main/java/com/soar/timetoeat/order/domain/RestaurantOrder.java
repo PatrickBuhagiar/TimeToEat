@@ -4,6 +4,8 @@ import com.soar.timetoeat.util.domain.order.OrderState;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -64,6 +66,15 @@ public class RestaurantOrder implements Serializable {
         return expectedDeliveryTime;
     }
 
+    public String getHumanizedExpectedDeliveryTime() {
+        if (!Objects.isNull(expectedDeliveryTime)) {
+            final Timestamp timestamp = new Timestamp(expectedDeliveryTime);
+            Date expectedDate = new Date(timestamp.getTime());
+            return expectedDate.toString();
+        }
+        return "";
+    }
+
     public double getTotalPrice() {
         return totalPrice;
     }
@@ -109,6 +120,12 @@ public class RestaurantOrder implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(getId(), getRestaurantName(), getState(), getDeliveryAddress(), getExpectedDeliveryTime(), getTotalPrice(), getItems());
+    }
+
+    public String itemsAsString() {
+        final StringBuilder stringBuilder = new StringBuilder();
+        items.forEach(item -> stringBuilder.append(item.toString()));
+        return stringBuilder.toString();
     }
 
     public static final class OrderBuilder {

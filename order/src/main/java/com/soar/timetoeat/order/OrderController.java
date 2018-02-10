@@ -29,16 +29,15 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 public class OrderController {
 
     private final OrderRepository repository;
-    private final JmsTemplate jmsTemplate;
     private Session session;
 
     private HashMap<String, Queue> queueMap = new HashMap<>();
+    private HashMap<String, Topic> topicMap = new HashMap<>();
 
     @Autowired
     public OrderController(final OrderRepository repository,
                            final JmsTemplate jmsTemplate) throws JMSException {
         this.repository = repository;
-        this.jmsTemplate = jmsTemplate;
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:3000");
         Connection connection = connectionFactory.createConnection();
         connection.start();
@@ -88,7 +87,7 @@ public class OrderController {
     @RequestMapping(value = "orders/{orderId}", method = POST)
     public @ResponseBody
     ResponseEntity<RestaurantOrder> updateOrder(@PathVariable("orderId") final Long orderId,
-                                                @RequestBody final UpdateOrderParams params) {
+                                                @RequestBody final UpdateOrderParams params) throws JMSException {
         final RestaurantOrder order = repository.findOne(orderId);
         if (Objects.isNull(order)) {
             return ResponseEntity.status(NOT_FOUND).body(null);
@@ -106,7 +105,30 @@ public class OrderController {
             order.setExpectedDeliveryTime(params.getExpectedDeliveryTime());
         }
         order.setState(params.getState());
-        return ResponseEntity.status(HttpStatus.OK).body(repository.save(order));
+        final RestaurantOrder updatedOrder = repository.save(order);
+
+        //publish to channel
+        if (!topicMap.containsKey(updatedOrder.getClientUsername())) {
+            topicMap.put(updatedOrder.getClientUsername(), session.createTopic("cli-" + updatedOrder.getClientUsername()));
+        }
+        final MessageProducer producer = session.createProducer(topicMap.get(updatedOrder.getClientUsername()));
+        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+
+        final TextMessage message = session.createTextMessage();
+        message.setText(preparePushNotificationMessage(updatedOrder));
+        producer.send(message);
+
+        return ResponseEntity.status(HttpStatus.OK).body(updatedOrder);
+    }
+
+    private String preparePushNotificationMessage(final RestaurantOrder updatedOrder) {
+        final StringBuilder messageBuilder = new StringBuilder();
+        messageBuilder.append("Your order of: \n" + updatedOrder.itemsAsString() + "\n from " + updatedOrder.getRestaurantName()
+                + " is now " + updatedOrder.getState().getDescription());
+        if (!updatedOrder.getState().equals(OrderState.DELIVERED)) {
+            messageBuilder.append("\n and is expected to be delivered at " + updatedOrder.getHumanizedExpectedDeliveryTime());
+        }
+        return messageBuilder.toString();
     }
 
     @RequestMapping(value = "orders/{orderId}", method = GET)

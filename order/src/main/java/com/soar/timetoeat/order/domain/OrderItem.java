@@ -58,6 +58,11 @@ public class OrderItem implements Serializable {
         return Objects.hash(getId(), getName(), getQuantity(), getUnitPrice());
     }
 
+    @Override
+    public String toString() {
+        return  name + " x " + quantity + ", ";
+    }
+
     public static final class OrderItemBuilder {
         private String name;
         private int quantity;
