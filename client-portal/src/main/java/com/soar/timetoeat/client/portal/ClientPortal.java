@@ -31,10 +31,12 @@ import org.springframework.http.ResponseEntity;
 import javax.jms.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Timestamp;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -80,10 +82,12 @@ public class ClientPortal extends JPanel implements ActionListener {
     private JList<String> restaurantList;
     private JTextField restaurant_nameText;
     private JTextField restaurant_addressText;
+    private JTextField restaurant_deliveryAddressText;
+    private JTextField restaurant_cardNumberText;
+    private JTextField restaurant_cvvText;
     private boolean selectedAtLeastOneRestaurant = false;
     private DefaultTableModel restaurant_dtm;
     private JButton createOrderButton;
-    private JTextField restaurant_deliveryAddressText;
     private RestaurantOrder currentOrder;
 
     //order fields
@@ -349,7 +353,7 @@ public class ClientPortal extends JPanel implements ActionListener {
 
                     //create order button
                     createOrderButton = new JButton("create order");
-                    createOrderButton.setBounds(480, 450, 120, 25);
+                    createOrderButton.setBounds(480, 480, 120, 25);
                     createOrderButton.addActionListener(this);
                     panel.add(createOrderButton);
 
@@ -361,6 +365,38 @@ public class ClientPortal extends JPanel implements ActionListener {
                     restaurant_deliveryAddressText = new JTextField(30);
                     restaurant_deliveryAddressText.setBounds(150, 450, 160, 25);
                     panel.add(restaurant_deliveryAddressText);
+
+                    //Add Card field
+                    JLabel cardNumberLabel = new JLabel("Card Number");
+                    cardNumberLabel.setBounds(10, 480, 130, 25);
+                    panel.add(cardNumberLabel);
+
+                    NumberFormat format = NumberFormat.getInstance();
+                    format.setGroupingUsed(false);
+                    NumberFormatter formatter = new NumberFormatter(format);
+                    formatter.setValueClass(Long.class);
+                    formatter.setAllowsInvalid(false);
+                    formatter.setCommitsOnValidEdit(true);
+                    restaurant_cardNumberText = new JFormattedTextField(formatter);
+
+                    restaurant_cardNumberText.setBounds(150, 480, 160, 25);
+                    panel.add(restaurant_cardNumberText);
+
+                    //Add CVV field
+                    JLabel cvvLabel = new JLabel("CVV");
+                    cvvLabel.setBounds(320, 480, 30, 25);
+                    panel.add(cvvLabel);
+
+                    NumberFormat format2 = NumberFormat.getInstance();
+                    format2.setGroupingUsed(false);
+                    NumberFormatter formatter2 = new NumberFormatter(format2);
+                    formatter2.setValueClass(Integer.class);
+                    formatter2.setMaximum(999);
+                    formatter2.setAllowsInvalid(false);
+                    formatter2.setCommitsOnValidEdit(true);
+                    restaurant_cvvText = new JFormattedTextField(formatter2);
+                    restaurant_cvvText.setBounds(360, 480, 50, 25);
+                    panel.add(restaurant_cvvText);
 
                     panel.revalidate();
                     panel.repaint();
@@ -500,6 +536,8 @@ public class ClientPortal extends JPanel implements ActionListener {
 
         return CreateOrderParamsBuilder.aCreateOrderParams()
                 .withItems(itemParams)
+                .withCardNumber(Long.valueOf(restaurant_cardNumberText.getText()))
+                .withCvv(Integer.valueOf(restaurant_cvvText.getText()))
                 .withDeliveryAddress(restaurant_deliveryAddressText.getText())
                 .build();
     }

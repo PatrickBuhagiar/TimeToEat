@@ -25,6 +25,8 @@ public class RestaurantOrder implements Serializable {
     private Set<OrderItem> items = new HashSet<>();
     private String clientUsername;
     private String restaurantUsername;
+    private Long cardNumber;
+    private int cvv;
 
     private RestaurantOrder() {
     }
@@ -37,6 +39,8 @@ public class RestaurantOrder implements Serializable {
         this.totalPrice = calculateTotalPrice(this.items);
         this.deliveryAddress = builder.deliveryAddress;
         this.clientUsername = builder.clientUsername;
+        this.cardNumber = builder.cardNumber;
+        this.cvv = builder.cvv;
     }
 
     private double calculateTotalPrice(final Set<OrderItem> items)  {
@@ -91,6 +95,14 @@ public class RestaurantOrder implements Serializable {
         return restaurantUsername;
     }
 
+    public Long getCardNumber() {
+        return cardNumber;
+    }
+
+    public int getCvv() {
+        return cvv;
+    }
+
     public void setState(final OrderState state) {
         this.state = state;
     }
@@ -103,29 +115,34 @@ public class RestaurantOrder implements Serializable {
         this.expectedDeliveryTime = expectedDeliveryTime;
     }
 
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (!(o instanceof RestaurantOrder)) return false;
-        final RestaurantOrder order = (RestaurantOrder) o;
-        return getId() == order.getId() &&
-                getRestaurantName() == order.getRestaurantName() &&
-                Double.compare(order.getTotalPrice(), getTotalPrice()) == 0 &&
-                getState() == order.getState() &&
-                Objects.equals(getDeliveryAddress(), order.getDeliveryAddress()) &&
-                Objects.equals(getExpectedDeliveryTime(), order.getExpectedDeliveryTime()) &&
-                Objects.equals(getItems(), order.getItems());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getId(), getRestaurantName(), getState(), getDeliveryAddress(), getExpectedDeliveryTime(), getTotalPrice(), getItems());
-    }
-
     public String getItemsAsString() {
         final StringBuilder stringBuilder = new StringBuilder();
         items.forEach(item -> stringBuilder.append(item.toString()));
         return stringBuilder.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RestaurantOrder)) return false;
+        final RestaurantOrder that = (RestaurantOrder) o;
+        return getId() == that.getId() &&
+                Double.compare(that.getTotalPrice(), getTotalPrice()) == 0 &&
+                getCvv() == that.getCvv() &&
+                Objects.equals(getRestaurantName(), that.getRestaurantName()) &&
+                getState() == that.getState() &&
+                Objects.equals(getDeliveryAddress(), that.getDeliveryAddress()) &&
+                Objects.equals(getExpectedDeliveryTime(), that.getExpectedDeliveryTime()) &&
+                Objects.equals(getItems(), that.getItems()) &&
+                Objects.equals(getClientUsername(), that.getClientUsername()) &&
+                Objects.equals(getRestaurantUsername(), that.getRestaurantUsername()) &&
+                Objects.equals(getCardNumber(), that.getCardNumber());
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(getId(), getRestaurantName(), getState(), getDeliveryAddress(), getExpectedDeliveryTime(), getTotalPrice(), getItems(), getClientUsername(), getRestaurantUsername(), getCardNumber(), getCvv());
     }
 
     public static final class OrderBuilder {
@@ -135,6 +152,8 @@ public class RestaurantOrder implements Serializable {
         private Long expectedDeliveryTime;
         private Set<OrderItem> items = new HashSet<>();
         private String clientUsername;
+        public int cvv;
+        public Long cardNumber;
 
         private OrderBuilder() {
         }
@@ -170,6 +189,16 @@ public class RestaurantOrder implements Serializable {
 
         public OrderBuilder withClientUsername(String clientUsername) {
             this.clientUsername = clientUsername;
+            return this;
+        }
+
+        public OrderBuilder withCardNumber(final long cardNumber) {
+            this.cardNumber = cardNumber;
+            return this;
+        }
+
+        public OrderBuilder withCvv(final int cvv) {
+            this.cvv = cvv;
             return this;
         }
 

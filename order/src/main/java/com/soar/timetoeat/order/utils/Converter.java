@@ -29,6 +29,8 @@ public class Converter {
                 .withRestaurantName(restaurantName)
                 .withState(OrderState.AWAIT_APPROVAL)
                 .withClientUsername(clientUsername)
+                .withCardNumber(params.getCardNumber())
+                .withCvv(params.getCvv())
                 .withItems(params.getItems()
                         .stream()
                         .map(Converter::convert)
