@@ -5,6 +5,7 @@ public enum OrderState {
     AWAIT_APPROVAL("Awaiting Approval"),
     ACCEPTED("Accepted"),
     DECLINED("Declined"),
+    PREPARING("Being Prepared"),
     ON_THE_WAY("On the Way"),
     DELIVERED("Delivered");
 

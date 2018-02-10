@@ -14,7 +14,9 @@ import com.soar.timetoeat.util.params.order.CreateOrderItemParams.CreateOrderIte
 import com.soar.timetoeat.util.params.order.CreateOrderParams;
 import com.soar.timetoeat.util.params.order.CreateOrderParams.CreateOrderParamsBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
@@ -28,14 +30,13 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Comparator;
-import java.util.HashSet;
+import java.sql.Timestamp;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @SpringBootApplication
+@EnableAutoConfiguration(exclude = RepositoryRestMvcAutoConfiguration.class)
 @EnableFeignClients
 @EnableEurekaClient
 @EnableDiscoveryClient
@@ -225,7 +226,7 @@ public class ClientPortal extends JPanel implements ActionListener {
         orderHistoryTable.setModel(order_dtm);
         final JScrollPane jScrollPane = new JScrollPane(orderHistoryTable);
         jScrollPane.setVisible(true);
-        jScrollPane.setBounds(10, 40, 500, 310);
+        jScrollPane.setBounds(10, 40, 600, 310);
         panel.add(jScrollPane);
 
     }
@@ -336,8 +337,16 @@ public class ClientPortal extends JPanel implements ActionListener {
 
     private void populateOrderHistoryTableFromOrderHistory() {
         order_dtm.setRowCount(0);
-        orderHistory.forEach(order ->
-                order_dtm.addRow(new Object[]{order.getRestaurantName(), order.itemsAsString(), order.getTotalPrice(), order.getState(), order.getExpectedDeliveryTime()}));
+        orderHistory.forEach(order -> {
+            String expectedDeliveryTimeString = "";
+            final Long expectedDeliveryTime = order.getExpectedDeliveryTime();
+            if (!Objects.isNull(expectedDeliveryTime)) {
+                final Timestamp timestamp = new Timestamp(expectedDeliveryTime);
+                Date expectedDate = new Date(timestamp.getTime());
+                expectedDeliveryTimeString = expectedDate.toString();
+            }
+            order_dtm.addRow(new Object[]{order.getRestaurantName(), order.itemsAsString(), order.getTotalPrice(), order.getState(), expectedDeliveryTimeString});
+        });
     }
 
     @Override

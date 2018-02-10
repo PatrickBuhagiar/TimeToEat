@@ -102,7 +102,7 @@ public class OrderController {
                 && !order.getRestaurantUsername().equals(loggedInRestaurantUsername)) {
             return ResponseEntity.status(UNAUTHORIZED).body(null);
         }
-        if (!Objects.isNull(order.getExpectedDeliveryTime())) {
+        if (!Objects.isNull(params.getExpectedDeliveryTime())) {
             order.setExpectedDeliveryTime(params.getExpectedDeliveryTime());
         }
         order.setState(params.getState());

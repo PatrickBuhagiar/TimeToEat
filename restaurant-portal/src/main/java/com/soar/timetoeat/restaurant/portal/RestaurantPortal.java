@@ -7,6 +7,7 @@ import com.soar.timetoeat.restaurant.portal.dao.RestaurantClient;
 import com.soar.timetoeat.util.domain.auth.UserRole;
 import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.domain.order.OrderState;
+import com.soar.timetoeat.util.domain.order.RestaurantOrder;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
 import com.soar.timetoeat.util.params.auth.CreateUserParams.CreateUserParamsBuilder;
 import com.soar.timetoeat.util.params.auth.LoginRequest;
@@ -18,7 +19,9 @@ import com.soar.timetoeat.util.params.order.UpdateOrderParams.UpdateOrderParamsB
 import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams.CreateRestaurantParamsBuilder;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
@@ -35,15 +38,16 @@ import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Timestamp;
 import java.text.NumberFormat;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static javax.swing.JOptionPane.*;
 
 @SpringBootApplication
+@EnableAutoConfiguration(exclude = RepositoryRestMvcAutoConfiguration.class)
 @EnableFeignClients
 @EnableEurekaClient
 @EnableDiscoveryClient
@@ -91,7 +95,14 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     private JLabel unitPriceLabel;
     private Queue queue;
 
+    //order fields
+    private JPanel ordersPanel;
+
     private static final long ONE_MINUTE_IN_MILLIS = 60000;
+    private DefaultTableModel order_dtm;
+    private List<RestaurantOrder> orderHistory;
+    private RestaurantOrder selectedOrder;
+    private JButton updatedOrderButton;
 
     @Autowired
     public RestaurantPortal(final AuthClient authClient,
@@ -147,6 +158,12 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         tabbedPane.addTab("Home", restaurantPanel);
         //initially, home won't be accessible
         tabbedPane.setEnabledAt(2, false);
+
+        //order
+        ordersPanel = new JPanel();
+        placeOrderComponents(ordersPanel);
+        tabbedPane.addTab("Orders", ordersPanel);
+        tabbedPane.setEnabledAt(3, false);
 
         //Add tabbed pane to panel
         setLayout(new GridLayout(1, 1));
@@ -303,6 +320,53 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         updateRestaurantFields(panel);
     }
 
+    private void placeOrderComponents(final JPanel panel) {
+        panel.setLayout(null);
+
+        JLabel detailsLabel = new JLabel("Order History");
+        detailsLabel.setBounds(10, 10, 200, 30);
+        detailsLabel.setFont(new Font(detailsLabel.getName(), Font.BOLD, 20));
+        panel.add(detailsLabel);
+
+        //Add table
+        String[] columnNames = new String[]{"order id", "Address", "Items", "Total Price", "Expected Arrival Time", "Status"};
+        JTable orderHistoryTable = new JTable() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        updatedOrderButton = new JButton("update selected order to next state");
+        updatedOrderButton.setBounds(10, 350, 600, 25);
+        updatedOrderButton.addActionListener(this);
+        panel.add(updatedOrderButton);
+
+
+        order_dtm = new DefaultTableModel(0, 0);
+        order_dtm.setColumnIdentifiers(columnNames);
+        orderHistoryTable.getSelectionModel().addListSelectionListener(e -> {
+            if (orderHistoryTable.getSelectedRow() > -1) {
+                final Long selectedOrderId = (Long) orderHistoryTable.getValueAt(orderHistoryTable.getSelectedRow(), 0);
+                final Optional<RestaurantOrder> filteredOrder = orderHistory.stream().filter(order -> order.getId() == selectedOrderId).findFirst();
+                selectedOrder = filteredOrder.orElse(null);
+                if (!Objects.isNull(selectedOrder)) {
+                    if (selectedOrder.getState().equals(OrderState.DECLINED) || selectedOrder.getState().equals(OrderState.DELIVERED)) {
+                        updatedOrderButton.setEnabled(false);
+                    } else {
+                        updatedOrderButton.setEnabled(true);
+                    }
+                }
+            }
+        });
+        orderHistoryTable.setModel(order_dtm);
+        final JScrollPane jScrollPane = new JScrollPane(orderHistoryTable);
+        jScrollPane.setVisible(true);
+        jScrollPane.setBounds(10, 40, 600, 310);
+        panel.add(jScrollPane);
+
+    }
+
     private void updateRestaurantFields(final JPanel panel) {
         if (!Objects.isNull(currentRestaurant) && !Objects.isNull(currentMenu)) {
             restaurant_nameText.setText(currentRestaurant.getName());
@@ -344,6 +408,9 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             case "add to menu":
                 addToMenu();
                 break;
+            case "update selected order to next state":
+                updateOrderToNextState();
+                break;
             default:
                 JOptionPane.showMessageDialog(frame, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
                 break;
@@ -362,6 +429,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             currentRestaurant = restaurantClient.getRestaurantByOwner(token);
             if (!Objects.isNull(currentRestaurant)) {
                 currentMenu = menuClient.getMenu(currentRestaurant.getId());
+                updateOrderHistory();
                 initialiseOrderQueue();
             }
             updateRestaurantFields(restaurantPanel);
@@ -374,6 +442,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             tabbedPane.setEnabledAt(0, false);
             tabbedPane.setEnabledAt(1, false);
             tabbedPane.setEnabledAt(2, true);
+            tabbedPane.setEnabledAt(3, true);
 
             //switch to home tab
             tabbedPane.setSelectedIndex(2);
@@ -444,6 +513,28 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         }
     }
 
+    private void updateOrderToNextState() {
+        if (!Objects.isNull(selectedOrder)) {
+            OrderState nextState;
+            if (selectedOrder.getState().equals(OrderState.ACCEPTED)) {
+                nextState = OrderState.PREPARING;
+            } else if (selectedOrder.getState().equals(OrderState.PREPARING)) {
+                nextState = OrderState.ON_THE_WAY;
+            } else if (selectedOrder.getState().equals(OrderState.ON_THE_WAY)) {
+                nextState = OrderState.DELIVERED;
+            } else {
+                //do nothing
+                return;
+            }
+            orderClient.updateOrder(token, selectedOrder.getId(),
+                    UpdateOrderParamsBuilder
+                            .anUpdateOrderParams()
+                            .withState(nextState)
+                            .build());
+            updateOrderHistory();
+        }
+    }
+
     private CreateMenuParams extractMenuParamsFromTable() {
         Set<CreateItemParams> itemParams = new HashSet<>();
         final Object[][] tableData = new Object[dtm.getRowCount()][dtm.getColumnCount()];
@@ -482,6 +573,27 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         unitPriceText.setValue(0.0);
     }
 
+    private void populateOrderHistoryTableFromOrderHistory() {
+        order_dtm.setRowCount(0);
+        orderHistory.forEach(order -> {
+            String expectedDeliveryTimeString = "";
+            final Long expectedDeliveryTime = order.getExpectedDeliveryTime();
+            if (!Objects.isNull(expectedDeliveryTime)) {
+                final Timestamp timestamp = new Timestamp(expectedDeliveryTime);
+                Date expectedDate = new Date(timestamp.getTime());
+                expectedDeliveryTimeString = expectedDate.toString();
+            }
+            order_dtm.addRow(new Object[]{order.getId(), order.getDeliveryAddress(), order.itemsAsString(), order.getTotalPrice(), expectedDeliveryTimeString, order.getState()});
+        });
+    }
+
+    private void updateOrderHistory() {
+        orderHistory = orderClient.getRestaurantOrders(token).stream()
+                .sorted(Comparator.comparingLong(RestaurantOrder::getId).reversed())
+                .collect(Collectors.toList());
+        populateOrderHistoryTableFromOrderHistory();
+    }
+
     class MessageListener implements javax.jms.MessageListener {
 
         @Override
@@ -502,6 +614,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                             .withState(OrderState.DECLINED)
                             .build());
                 }
+                updateOrderHistory();
             } catch (JMSException e) {
                 e.printStackTrace();
             }
