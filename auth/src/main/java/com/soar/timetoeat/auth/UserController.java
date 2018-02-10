@@ -37,6 +37,7 @@ public class UserController {
                 .withRole(params.getRole())
                 .withEmail(params.getEmail())
                 .withUsername(params.getUsername())
+                .withFullName(params.getFullName())
                 .withPassword(bCryptPasswordEncoder.encode(params.getPassword()))
                 .build();
         return applicationUserRepository.save(newUser);

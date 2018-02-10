@@ -7,6 +7,7 @@ import java.util.Objects;
 
 public class CreateUserParams implements Serializable {
     private String username;
+    private String fullName;
     private String password;
     private String email;
     private UserRole role;
@@ -18,6 +19,7 @@ public class CreateUserParams implements Serializable {
         this.password = builder.password;
         this.email = builder.email;
         this.role = builder.role;
+        this.fullName = builder.fullName;
     }
 
     public String getUsername() {
@@ -36,12 +38,17 @@ public class CreateUserParams implements Serializable {
         return role;
     }
 
+    public String getFullName() {
+        return fullName;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
         if (!(o instanceof CreateUserParams)) return false;
         final CreateUserParams that = (CreateUserParams) o;
         return Objects.equals(getUsername(), that.getUsername()) &&
+                Objects.equals(fullName, that.fullName) &&
                 Objects.equals(getPassword(), that.getPassword()) &&
                 Objects.equals(getEmail(), that.getEmail()) &&
                 getRole() == that.getRole();
@@ -49,7 +56,7 @@ public class CreateUserParams implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getUsername(), getPassword(), getEmail(), getRole());
+        return Objects.hash(getUsername(), fullName, getPassword(), getEmail(), getRole());
     }
 
     public static final class CreateUserParamsBuilder {
@@ -57,6 +64,7 @@ public class CreateUserParams implements Serializable {
         private String password;
         private String email;
         private UserRole role;
+        public String fullName;
 
         private CreateUserParamsBuilder() {
         }
@@ -82,6 +90,11 @@ public class CreateUserParams implements Serializable {
 
         public CreateUserParamsBuilder withRole(UserRole role) {
             this.role = role;
+            return this;
+        }
+
+        public CreateUserParamsBuilder withFullName(final String fullName) {
+            this.fullName = fullName;
             return this;
         }
 

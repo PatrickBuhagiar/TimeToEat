@@ -12,6 +12,7 @@ public class User implements Serializable {
 
     private long id;
     private String username;
+    private String fullName;
     private String password;
     private String email;
     private UserRole role;
@@ -20,6 +21,7 @@ public class User implements Serializable {
 
     public User(final long id,
                 final String username,
+                final String fullName,
                 final String password,
                 final String email,
                 final UserRole role) {
@@ -28,6 +30,7 @@ public class User implements Serializable {
         this.password = password;
         this.email = email;
         this.role = role;
+        this.fullName = fullName;
     }
 
     public long getId() {
@@ -50,20 +53,26 @@ public class User implements Serializable {
         return role;
     }
 
+    public String getFullName() {
+        return fullName;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
         if (!(o instanceof User)) return false;
         final User user = (User) o;
-        return id == user.id &&
-                Objects.equals(username, user.username) &&
-                Objects.equals(password, user.password) &&
-                Objects.equals(email, user.email) &&
-                role == user.role;
+        return getId() == user.getId() &&
+                Objects.equals(getUsername(), user.getUsername()) &&
+                Objects.equals(getFullName(), user.getFullName()) &&
+                Objects.equals(getPassword(), user.getPassword()) &&
+                Objects.equals(getEmail(), user.getEmail()) &&
+                getRole() == user.getRole();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, password, email, role);
+
+        return Objects.hash(getId(), getUsername(), getFullName(), getPassword(), getEmail(), getRole());
     }
 }

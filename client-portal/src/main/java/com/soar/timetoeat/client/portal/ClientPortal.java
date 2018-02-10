@@ -73,6 +73,7 @@ public class ClientPortal extends JPanel implements ActionListener {
     private JTextField register_emailText;
     private JTextField register_usernameText;
     private JPasswordField register_passwordText;
+    private JTextField register_fullNameText;
 
     //restaurant fields
     private JPanel homePanel;
@@ -207,24 +208,32 @@ public class ClientPortal extends JPanel implements ActionListener {
         register_usernameText.setBounds(120 + (frameWidth >> 2), 10 + (frameHeight >> 2), 160, 25);
         panel.add(register_usernameText);
 
+        JLabel fullNameLabel = new JLabel("Full Name");
+        fullNameLabel.setBounds(30 + (frameWidth >> 2), 40 + (frameHeight >> 2), 80, 25);
+        panel.add(fullNameLabel);
+
+        register_fullNameText = new JTextField(30);
+        register_fullNameText.setBounds(120 + (frameWidth >> 2), 40 + (frameHeight >> 2), 160, 25);
+        panel.add(register_fullNameText);
+
         JLabel emailLabel = new JLabel("Email");
-        emailLabel.setBounds(30 + (frameWidth >> 2), 40 + (frameHeight >> 2), 80, 25);
+        emailLabel.setBounds(30 + (frameWidth >> 2), 70 + (frameHeight >> 2), 80, 25);
         panel.add(emailLabel);
 
         register_emailText = new JTextField(30);
-        register_emailText.setBounds(120 + (frameWidth >> 2), 40 + (frameHeight >> 2), 160, 25);
+        register_emailText.setBounds(120 + (frameWidth >> 2), 70 + (frameHeight >> 2), 160, 25);
         panel.add(register_emailText);
 
         JLabel passwordLabel = new JLabel("Password");
-        passwordLabel.setBounds(30 + (frameWidth >> 2), 70 + (frameHeight >> 2), 80, 25);
+        passwordLabel.setBounds(30 + (frameWidth >> 2), 100 + (frameHeight >> 2), 80, 25);
         panel.add(passwordLabel);
 
         register_passwordText = new JPasswordField(30);
-        register_passwordText.setBounds(120 + (frameWidth >> 2), 70 + (frameHeight >> 2), 160, 25);
+        register_passwordText.setBounds(120 + (frameWidth >> 2), 100 + (frameHeight >> 2), 160, 25);
         panel.add(register_passwordText);
 
         JButton registerButton = new JButton("register");
-        registerButton.setBounds(200 + (frameWidth >> 2), 110 + (frameHeight >> 2), 80, 25);
+        registerButton.setBounds(200 + (frameWidth >> 2), 140 + (frameHeight >> 2), 80, 25);
         registerButton.addActionListener(this);
         panel.add(registerButton);
     }
@@ -437,6 +446,7 @@ public class ClientPortal extends JPanel implements ActionListener {
                 .withEmail(register_emailText.getText())
                 .withPassword(new String(register_passwordText.getPassword()))
                 .withUsername(register_usernameText.getText())
+                .withFullName(register_fullNameText.getText())
                 .withRole(UserRole.CLIENT)
                 .build());
         if (newUser.getStatusCode() == HttpStatus.OK) {
