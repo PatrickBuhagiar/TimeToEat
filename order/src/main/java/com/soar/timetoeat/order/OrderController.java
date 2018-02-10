@@ -100,6 +100,9 @@ public class OrderController {
      * other restaurants' orders, orders are search by the current logged in restaurant
      * user.
      *
+     * Orders that are declined by a restaurant do not include the restaurant's username.
+     * This means that declined orders are not retrieved from this method call.
+     *
      * @return The orders for the logged in restaurant.
      */
     @RequestMapping(value = "orders/restaurant", method = GET)

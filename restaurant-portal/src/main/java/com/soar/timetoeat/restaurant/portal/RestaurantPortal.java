@@ -5,6 +5,7 @@ import com.soar.timetoeat.restaurant.portal.dao.MenuClient;
 import com.soar.timetoeat.restaurant.portal.dao.OrderClient;
 import com.soar.timetoeat.restaurant.portal.dao.RestaurantClient;
 import com.soar.timetoeat.util.domain.auth.UserRole;
+import com.soar.timetoeat.util.domain.menu.Item;
 import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.domain.order.OrderState;
 import com.soar.timetoeat.util.domain.order.RestaurantOrder;
@@ -84,25 +85,19 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     private JButton createRestaurantButton;
 
     //menu fields
-    private DefaultTableModel dtm;
+    private DefaultTableModel menu_dtm;
     private JTextField menu_nameText;
     private JTextField menu_descriptionText;
     private JFormattedTextField unitPriceText;
-    private JButton addToMenuButton;
-    private JLabel addToMenuLabel;
-    private JLabel menuItemLabel;
-    private JLabel menuDescriptionLabel;
-    private JLabel unitPriceLabel;
     private Queue queue;
 
-    //order fields
-    private JPanel ordersPanel;
-
+    //orders
     private static final long ONE_MINUTE_IN_MILLIS = 60000;
     private DefaultTableModel order_dtm;
     private List<RestaurantOrder> orderHistory;
     private RestaurantOrder selectedOrder;
     private JButton updatedOrderButton;
+    private String selectedMenuItem;
 
     @Autowired
     public RestaurantPortal(final AuthClient authClient,
@@ -160,7 +155,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         tabbedPane.setEnabledAt(2, false);
 
         //order
-        ordersPanel = new JPanel();
+        final JPanel ordersPanel = new JPanel();
         placeOrderComponents(ordersPanel);
         tabbedPane.addTab("Orders", ordersPanel);
         tabbedPane.setEnabledAt(3, false);
@@ -262,20 +257,25 @@ public class RestaurantPortal extends JPanel implements ActionListener {
 
         String[] columnNames = new String[]{"Name", "Description", "UnitPrice"};
         JTable menuTable = new JTable();
-        dtm = new DefaultTableModel(0, 0);
-        dtm.setColumnIdentifiers(columnNames);
-        menuTable.setModel(dtm);
+        menu_dtm = new DefaultTableModel(0, 0);
+        menu_dtm.setColumnIdentifiers(columnNames);
+        menuTable.getSelectionModel().addListSelectionListener(e -> {
+            if (menuTable.getSelectedRow() > -1) {
+                selectedMenuItem = (String) menuTable.getValueAt(menuTable.getSelectedRow(), 0);
+            }
+        });
+        menuTable.setModel(menu_dtm);
         final JScrollPane menuScrollPane = new JScrollPane(menuTable);
         menuScrollPane.setBounds(280, 40, 300, 400);
         panel.add(menuScrollPane);
 
         //Add to menu fields
-        addToMenuLabel = new JLabel("Add To Menu");
+        final JLabel addToMenuLabel = new JLabel("Add To Menu");
         addToMenuLabel.setBounds(10, 100, 200, 30);
         addToMenuLabel.setFont(new Font(addToMenuLabel.getName(), Font.BOLD, 20));
         panel.add(addToMenuLabel);
 
-        menuItemLabel = new JLabel("Name");
+        final JLabel menuItemLabel = new JLabel("Name");
         menuItemLabel.setBounds(10, 130, 80, 25);
         panel.add(menuItemLabel);
 
@@ -283,7 +283,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         menu_nameText.setBounds(100, 130, 160, 25);
         panel.add(menu_nameText);
 
-        menuDescriptionLabel = new JLabel("Description");
+        final JLabel menuDescriptionLabel = new JLabel("Description");
         menuDescriptionLabel.setBounds(10, 160, 80, 25);
         panel.add(menuDescriptionLabel);
 
@@ -291,7 +291,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         menu_descriptionText.setBounds(100, 160, 160, 25);
         panel.add(menu_descriptionText);
 
-        unitPriceLabel = new JLabel("Unit Price");
+        final JLabel unitPriceLabel = new JLabel("Unit Price");
         unitPriceLabel.setBounds(10, 190, 80, 25);
         panel.add(unitPriceLabel);
 
@@ -307,10 +307,15 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         unitPriceText.setValue(0.0);
         panel.add(unitPriceText);
 
-        addToMenuButton = new JButton("add to menu");
+        final JButton addToMenuButton = new JButton("add to menu");
         addToMenuButton.setBounds(100, 220, 160, 25);
         addToMenuButton.addActionListener(this);
         panel.add(addToMenuButton);
+
+        final JButton removeMenuItem = new JButton("remove selected menu item");
+        removeMenuItem.setBounds(100, 250, 160, 25);
+        removeMenuItem.addActionListener(this);
+        panel.add(removeMenuItem);
 
         createRestaurantButton = new JButton("create restaurant and menu");
         createRestaurantButton.setBounds(10, 300, 250, 25);
@@ -375,21 +380,14 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             restaurant_addressText.setEditable(false);
 
             //remove fields
-            panel.remove(createRestaurantButton);
-            panel.remove(addToMenuButton);
-            panel.remove(addToMenuLabel);
-            panel.remove(menuDescriptionLabel);
-            panel.remove(menu_descriptionText);
-            panel.remove(menuItemLabel);
-            panel.remove(menu_nameText);
-            panel.remove(unitPriceLabel);
-            panel.remove(unitPriceText);
-            panel.remove(createRestaurantButton);
+            createRestaurantButton.setText("update menu");
 
             //populate table
             populateMenuTableFromCurrentMenu();
             panel.revalidate();
             panel.repaint();
+        } else {
+
         }
     }
 
@@ -405,16 +403,31 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             case "create restaurant and menu":
                 createRestaurantAndMenu();
                 break;
+            case "update menu":
+                updateMenu(currentRestaurant.getId());
+                JOptionPane.showMessageDialog(frame, "Menu updated!");
+                updateRestaurantFields(restaurantPanel);
+                break;
             case "add to menu":
                 addToMenu();
                 break;
             case "update selected order to next state":
                 updateOrderToNextState();
                 break;
+            case "remove selected menu item":
+                removeMenuItem();
+                break;
             default:
                 JOptionPane.showMessageDialog(frame, "A confused button click. What Do I do with " + e.getActionCommand() + "?");
                 break;
         }
+    }
+
+    private void removeMenuItem() {
+        if (!Objects.isNull(selectedMenuItem)) {
+            currentMenu.getItems().removeIf(item -> item.getName().equals(selectedMenuItem));
+        }
+        populateMenuTableFromCurrentMenu();
     }
 
     /**
@@ -501,16 +514,19 @@ public class RestaurantPortal extends JPanel implements ActionListener {
 
             if (restaurantResponse.getStatusCode() == HttpStatus.CREATED) {
                 final Restaurant restaurant = restaurantResponse.getBody();
-                final Menu menu = menuClient.createOrUpdateMenu(token, restaurant.getId(), extractMenuParamsFromTable());
 
                 currentRestaurant = restaurant;
-                currentMenu = menu;
+                updateMenu(restaurant.getId());
                 initialiseOrderQueue();
                 updateRestaurantFields(restaurantPanel);
             } else {
                 JOptionPane.showMessageDialog(frame, "failed to create Restaurant!");
             }
         }
+    }
+
+    private void updateMenu(final long restaurantId) {
+        currentMenu = menuClient.createOrUpdateMenu(token, restaurantId, extractMenuParamsFromTable());
     }
 
     private void updateOrderToNextState() {
@@ -537,10 +553,10 @@ public class RestaurantPortal extends JPanel implements ActionListener {
 
     private CreateMenuParams extractMenuParamsFromTable() {
         Set<CreateItemParams> itemParams = new HashSet<>();
-        final Object[][] tableData = new Object[dtm.getRowCount()][dtm.getColumnCount()];
-        for (int i = 0; i < dtm.getRowCount(); i++) {
-            for (int j = 0; j < dtm.getColumnCount(); j++) {
-                tableData[i][j] = dtm.getValueAt(i, j);
+        final Object[][] tableData = new Object[menu_dtm.getRowCount()][menu_dtm.getColumnCount()];
+        for (int i = 0; i < menu_dtm.getRowCount(); i++) {
+            for (int j = 0; j < menu_dtm.getColumnCount(); j++) {
+                tableData[i][j] = menu_dtm.getValueAt(i, j);
             }
 
             final CreateItemParams params = CreateItemParamsBuilder.aCreateItemParams()
@@ -557,9 +573,9 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     }
 
     private void populateMenuTableFromCurrentMenu() {
-        dtm.setRowCount(0);
+        menu_dtm.setRowCount(0);
         currentMenu.getItems()
-                .forEach(item -> dtm.addRow(new Object[]{item.getName(), item.getDescription(), item.getUnitPrice()}));
+                .forEach(item -> menu_dtm.addRow(new Object[]{item.getName(), item.getDescription(), item.getUnitPrice()}));
     }
 
     /**
@@ -567,7 +583,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
      */
     private void addToMenu() {
         double price = Double.valueOf(unitPriceText.getValue().toString().replaceAll("[^\\d.]+", ""));
-        dtm.addRow(new Object[]{menu_nameText.getText(), menu_descriptionText.getText(), price});
+        menu_dtm.addRow(new Object[]{menu_nameText.getText(), menu_descriptionText.getText(), price});
         menu_nameText.setText("");
         menu_descriptionText.setText("");
         unitPriceText.setValue(0.0);
