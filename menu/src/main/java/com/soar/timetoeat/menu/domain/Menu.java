@@ -13,8 +13,6 @@ import java.util.Set;
 public class Menu implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
     private long restaurantId;
     @OneToMany(cascade = CascadeType.ALL)
     private Set<Item> items = new HashSet<>();
@@ -25,10 +23,6 @@ public class Menu implements Serializable {
     private Menu(final MenuBuilder builder) {
         this.restaurantId = builder.restaurantId;
         this.items = builder.items;
-    }
-
-    public long getId() {
-        return id;
     }
 
     public long getRestaurantId() {
@@ -44,14 +38,13 @@ public class Menu implements Serializable {
         if (this == o) return true;
         if (!(o instanceof Menu)) return false;
         final Menu menu = (Menu) o;
-        return getId() == menu.getId() &&
-                getRestaurantId() == menu.getRestaurantId() &&
+        return getRestaurantId() == menu.getRestaurantId() &&
                 Objects.equals(getItems(), menu.getItems());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getRestaurantId(), getItems());
+        return Objects.hash(getRestaurantId(), getItems());
     }
 
     public static final class MenuBuilder {

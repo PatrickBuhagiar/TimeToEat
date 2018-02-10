@@ -6,9 +6,12 @@ import com.soar.timetoeat.util.params.menu.CreateMenuParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 import static com.soar.timetoeat.menu.utils.Converter.convert;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 @RestController
 public class MenuController {
@@ -39,10 +42,10 @@ public class MenuController {
      * @param params the creation parameters
      * @return the created {@link Menu}
      */
-    @RequestMapping(value = "restaurants/{restaurantId}/menu", method = POST)
+    @RequestMapping(value = "restaurants/{restaurantId}/menu", method = PUT)
     public @ResponseBody
-    Menu createMenu(@PathVariable final long restaurantId,
+    Menu createOrUpdateMenu(@PathVariable final long restaurantId,
                     @RequestBody final CreateMenuParams params) {
-        return repository.save(convert(params, restaurantId));
+            return repository.save(convert(params, restaurantId));
     }
 }

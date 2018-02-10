@@ -122,7 +122,7 @@ public class RestaurantOrder implements Serializable {
         return Objects.hash(getId(), getRestaurantName(), getState(), getDeliveryAddress(), getExpectedDeliveryTime(), getTotalPrice(), getItems());
     }
 
-    public String itemsAsString() {
+    public String getItemsAsString() {
         final StringBuilder stringBuilder = new StringBuilder();
         items.forEach(item -> stringBuilder.append(item.toString()));
         return stringBuilder.toString();

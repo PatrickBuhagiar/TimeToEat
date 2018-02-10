@@ -13,11 +13,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 @FeignClient("ORDER-SERVICE")
 public interface OrderClient {
 
-    @RequestMapping(value = "orders/{orderId}", method = GET)
-    @ResponseBody
-    ResponseEntity<RestaurantOrder> getOrder(@RequestHeader("Authorization") final String token,
-                                             @PathVariable("orderId") final Long orderId);
-
     @RequestMapping(value = "restaurants/{restaurantName}/checkout", method = RequestMethod.POST)
     @ResponseBody
     ResponseEntity<RestaurantOrder> createOrder(@RequestHeader("Authorization") final String token,

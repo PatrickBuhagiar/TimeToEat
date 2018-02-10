@@ -25,6 +25,11 @@ public class UserController {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
+    /**
+     * Register a new User.
+     * @param params the user creation parameters
+     * @return the created user
+     */
     @RequestMapping(name = "users/register", method = POST)
     public @ResponseBody
     User registerUser(@RequestBody final CreateUserParams params) {

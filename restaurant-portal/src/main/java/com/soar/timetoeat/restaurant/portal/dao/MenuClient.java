@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 @FeignClient("MENU-SERVICE")
 public interface MenuClient {
@@ -15,9 +16,9 @@ public interface MenuClient {
     @ResponseBody
     Menu getMenu(@PathVariable("restaurantId") final Long restaurantId);
 
-    @RequestMapping(value = "restaurants/{restaurantId}/menu", method = POST)
+    @RequestMapping(value = "restaurants/{restaurantId}/menu", method = PUT)
     @ResponseBody
-    Menu createMenu(@RequestHeader("Authorization") String token,
-                    @PathVariable("restaurantId") final long restaurantId,
-                    @RequestBody final CreateMenuParams params);
+    Menu createOrUpdateMenu(@RequestHeader("Authorization") String token,
+                            @PathVariable("restaurantId") final long restaurantId,
+                            @RequestBody final CreateMenuParams params);
 }

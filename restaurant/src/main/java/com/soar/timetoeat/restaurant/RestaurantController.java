@@ -16,7 +16,8 @@ import java.util.Set;
 
 import static com.soar.timetoeat.restaurant.utils.Converter.convert;
 import static com.soar.timetoeat.util.security.Authorisation.getLoggedInUsername;
-import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
@@ -33,6 +34,14 @@ public class RestaurantController {
         this.menuClient = menuClient;
     }
 
+    /**
+     * Get Restaurant by name. Authentication is not required for this particular call.
+     * Unlike {@link RestaurantController#getRestaurantByOwner()}, this also returns
+     * the menu of that restaurant. Naturally this call will be slower.
+     *
+     * @param restaurantName the name of the restaurant
+     * @return a response entity with the fetched restaurant
+     */
     @RequestMapping(value = "restaurants/{restaurantName}", method = GET)
     public @ResponseBody
     ResponseEntity<RestaurantWithMenu> getRestaurant(@PathVariable final String restaurantName) {
@@ -44,6 +53,13 @@ public class RestaurantController {
         return ResponseEntity.status(OK).body(convert(restaurant, menu));
     }
 
+    /**
+     * Create a new Restaurant. The logged in restaurant username is persisted with
+     * the restaurant as the owner
+     *
+     * @param params the restaurant creation parameters
+     * @return a response entity with the created Restaurant
+     */
     @RequestMapping(value = "restaurants", method = POST)
     public @ResponseBody
     ResponseEntity<Restaurant> createRestaurant(@RequestBody final CreateRestaurantParams params) {
@@ -52,12 +68,24 @@ public class RestaurantController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null));
     }
 
+    /**
+     * Get All restaurants. This call does not need authorisation.
+     *
+     * @return a set of restaurants
+     */
     @RequestMapping(value = "restaurants", method = GET)
     public @ResponseBody
     Set<Restaurant> getAllRestaurants() {
         return repository.findAll();
     }
 
+    /**
+     * Retrieve a restaurant by the current logged in restaurant user. Unlike
+     * {@link RestaurantController#getRestaurant(String)}, this only returns the
+     * restaurant details, not the menu
+     *
+     * @return the fetched restaurant
+     */
     @RequestMapping(value = "restaurant", method = GET)
     public @ResponseBody
     Restaurant getRestaurantByOwner() {

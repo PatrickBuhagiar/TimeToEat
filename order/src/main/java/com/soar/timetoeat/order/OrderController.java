@@ -9,17 +9,14 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.jms.*;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import static com.soar.timetoeat.order.utils.Converter.convert;
-import static com.soar.timetoeat.order.utils.Converter.convertForMessage;
 import static com.soar.timetoeat.util.security.Authorisation.getLoggedInUsername;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -35,8 +32,7 @@ public class OrderController {
     private HashMap<String, Topic> topicMap = new HashMap<>();
 
     @Autowired
-    public OrderController(final OrderRepository repository,
-                           final JmsTemplate jmsTemplate) throws JMSException {
+    public OrderController(final OrderRepository repository) throws JMSException {
         this.repository = repository;
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:3000");
         Connection connection = connectionFactory.createConnection();
@@ -44,6 +40,14 @@ public class OrderController {
         this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
+    /**
+     * Create a new order.
+     *
+     * @param restaurantName the name of the restaurant
+     * @param params         the order creation parameters
+     * @return a response entity with the created Order
+     * @throws JMSException a JMS exception
+     */
     @RequestMapping(value = "restaurants/{restaurantName}/checkout", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<RestaurantOrder> createOrder(@PathVariable("restaurantName") final String restaurantName,
@@ -55,59 +59,118 @@ public class OrderController {
 
         if (getLoggedInUsername().isPresent()) {
             final String username = getLoggedInUsername().get();
-            final RestaurantOrder order = repository.save(convert(restaurantName, params, username));
+            final RestaurantOrder createdOrder = repository.save(convert(restaurantName, params, username));
             //Send Message to Restaurant Queue
-            final MessageProducer producer = session.createProducer(queueMap.get(restaurantName));
-            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            publishToQueue(restaurantName, createdOrder);
 
-            final MapMessage message = session.createMapMessage();
-            message.setLong("id", order.getId());
-            message.setString("address", order.getDeliveryAddress());
-            message.setDouble("total", order.getTotalPrice());
-            producer.send(message);
-
-            return ResponseEntity.status(CREATED).body(order);
+            return ResponseEntity.status(CREATED).body(createdOrder);
         } else {
             return ResponseEntity.status(UNAUTHORIZED).body(null);
         }
     }
 
+    /**
+     * Send a message to the queue.
+     *
+     * @param restaurantName the name of the restaurant
+     * @param createdOrder   the createdOrder
+     * @throws JMSException a JMS Exception
+     */
+    private void publishToQueue(final @PathVariable("restaurantName") String restaurantName,
+                                final RestaurantOrder createdOrder) throws JMSException {
+        final MessageProducer producer = session.createProducer(queueMap.get(restaurantName));
+        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+
+        final TextMessage message = session.createTextMessage();
+        StringBuilder builder = new StringBuilder();
+        message.setText(builder.append("New Order of:\n")
+                .append(createdOrder.getItemsAsString())
+                .append("\nto ")
+                .append(createdOrder.getDeliveryAddress())
+                .append("\nfor £")
+                .append(createdOrder.getTotalPrice())
+                .append(". Accept order?")
+                .toString());
+        message.setLongProperty("id", createdOrder.getId());
+        producer.send(message);
+    }
+
+    /**
+     * Get the orders for a particular restaurant. To prevent anyone from accessing
+     * other restaurants' orders, orders are search by the current logged in restaurant
+     * user.
+     *
+     * @return The orders for the logged in restaurant.
+     */
     @RequestMapping(value = "orders/restaurant", method = GET)
     public @ResponseBody
     Set<RestaurantOrder> getRestaurantOrders() {
         return repository.findByRestaurantUsername(getLoggedInUsername().get());
     }
 
+    /**
+     * Similar to {@link OrderController#getRestaurantOrders()}, where a client can retrieve
+     * his or her orders, but by searching by the current logged in user. This prevents
+     * other people from searching for other client's orders.
+     *
+     * @return the orders for the logged in client
+     */
     @RequestMapping(value = "orders/client", method = GET)
     public @ResponseBody
     Set<RestaurantOrder> getClientOrders() {
         return repository.findByClientUsername(getLoggedInUsername().get());
     }
 
+    /**
+     * Update an order. The order must match with the logged in restaurant username in order
+     * to succeed.
+     *
+     * @param orderId the order id
+     * @param params  the update parameters
+     * @return a response entity with the updated restaurant order
+     * @throws JMSException a JMS exception
+     */
     @RequestMapping(value = "orders/{orderId}", method = POST)
     public @ResponseBody
     ResponseEntity<RestaurantOrder> updateOrder(@PathVariable("orderId") final Long orderId,
                                                 @RequestBody final UpdateOrderParams params) throws JMSException {
+        //search for order
         final RestaurantOrder order = repository.findOne(orderId);
         if (Objects.isNull(order)) {
             return ResponseEntity.status(NOT_FOUND).body(null);
         }
+        //get logged in user
         final String loggedInRestaurantUsername = getLoggedInUsername().get();
         //Case when order gets approved for the first time, we set the restaurant username
         if (order.getState().equals(OrderState.AWAIT_APPROVAL) && !params.getState().equals(OrderState.DECLINED)) {
             order.setRestaurantUsername(loggedInRestaurantUsername);
         }
+        //AUTHORISATION: The logged in username must match the order's restaurant username
         if (!Objects.isNull(order.getRestaurantUsername())
                 && !order.getRestaurantUsername().equals(loggedInRestaurantUsername)) {
             return ResponseEntity.status(UNAUTHORIZED).body(null);
         }
+        //set expected delivery time if present in parameters
         if (!Objects.isNull(params.getExpectedDeliveryTime())) {
             order.setExpectedDeliveryTime(params.getExpectedDeliveryTime());
         }
+        //update order status
         order.setState(params.getState());
         final RestaurantOrder updatedOrder = repository.save(order);
 
-        //publish to channel
+        //publish order update to topic
+        publishToTopic(updatedOrder);
+
+        return ResponseEntity.status(HttpStatus.OK).body(updatedOrder);
+    }
+
+    /**
+     * Publish the updated order to topic
+     *
+     * @param updatedOrder the updated order
+     * @throws JMSException a JMS exception
+     */
+    private void publishToTopic(final RestaurantOrder updatedOrder) throws JMSException {
         if (!topicMap.containsKey(updatedOrder.getClientUsername())) {
             topicMap.put(updatedOrder.getClientUsername(), session.createTopic("cli-" + updatedOrder.getClientUsername()));
         }
@@ -117,35 +180,26 @@ public class OrderController {
         final TextMessage message = session.createTextMessage();
         message.setText(preparePushNotificationMessage(updatedOrder));
         producer.send(message);
-
-        return ResponseEntity.status(HttpStatus.OK).body(updatedOrder);
     }
 
+    /**
+     * Prepare the message to be sent to the topic
+     *
+     * @param updatedOrder the updated order
+     * @return the message to be sent
+     */
     private String preparePushNotificationMessage(final RestaurantOrder updatedOrder) {
         final StringBuilder messageBuilder = new StringBuilder();
-        messageBuilder.append("Your order of: \n" + updatedOrder.itemsAsString() + "\n from " + updatedOrder.getRestaurantName()
-                + " is now " + updatedOrder.getState().getDescription());
-        if (!updatedOrder.getState().equals(OrderState.DELIVERED)) {
-            messageBuilder.append("\n and is expected to be delivered at " + updatedOrder.getHumanizedExpectedDeliveryTime());
+        messageBuilder.append("Your order of: \n")
+                .append(updatedOrder.getItemsAsString())
+                .append("\nfrom ")
+                .append(updatedOrder.getRestaurantName())
+                .append("\nis now ")
+                .append(updatedOrder.getState().getDescription());
+        if (!(updatedOrder.getState().equals(OrderState.DELIVERED) || updatedOrder.getState().equals(OrderState.DECLINED))) {
+            messageBuilder.append("\nand will be delivered at \n")
+                    .append(updatedOrder.getHumanizedExpectedDeliveryTime());
         }
         return messageBuilder.toString();
-    }
-
-    @RequestMapping(value = "orders/{orderId}", method = GET)
-    public @ResponseBody
-    ResponseEntity<RestaurantOrder> getOrder(@PathVariable("orderId") final Long orderId) {
-
-        final RestaurantOrder order = repository.findOne(orderId);
-        if (Objects.isNull(order)) {
-            return ResponseEntity.status(NOT_FOUND).body(null);
-        }
-
-        final String loggedInUsername = getLoggedInUsername().get();
-        if (loggedInUsername.equals(order.getClientUsername())
-                || loggedInUsername.equals(order.getRestaurantUsername())) {
-            return ResponseEntity.status(OK).body(order);
-        } else {
-            return ResponseEntity.status(UNAUTHORIZED).body(null);
-        }
     }
 }

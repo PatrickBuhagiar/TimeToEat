@@ -501,7 +501,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
 
             if (restaurantResponse.getStatusCode() == HttpStatus.CREATED) {
                 final Restaurant restaurant = restaurantResponse.getBody();
-                final Menu menu = menuClient.createMenu(token, restaurant.getId(), extractMenuParamsFromTable());
+                final Menu menu = menuClient.createOrUpdateMenu(token, restaurant.getId(), extractMenuParamsFromTable());
 
                 currentRestaurant = restaurant;
                 currentMenu = menu;
@@ -599,18 +599,18 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         @Override
         public void onMessage(final Message message) {
             try {
-                MapMessage mapMessage = (MapMessage) message;
-                final int select = JOptionPane.showConfirmDialog(frame, "`New Order to " + mapMessage.getString("address") + " for £" + mapMessage.getDouble("total") + ". Accept order?", "New Order", YES_NO_OPTION);
+                TextMessage textMessage = (TextMessage) message;
+                final int select = JOptionPane.showConfirmDialog(frame, textMessage.getText(), "New Order", YES_NO_OPTION);
                 if (select == YES_OPTION) {
                     Object[] possibilities = {"15", "30", "45", "60", "75", "90"};
                     final String time = (String) JOptionPane.showInputDialog(frame, "I will deliver in (minutes):", "Delivery time", JOptionPane.PLAIN_MESSAGE, null, possibilities, "15");
                     final long expectedTimeOfDelivery = System.currentTimeMillis() + (Long.valueOf(time) * ONE_MINUTE_IN_MILLIS);
-                    orderClient.updateOrder(token, mapMessage.getLong("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
+                    orderClient.updateOrder(token, textMessage.getLongProperty("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
                             .withExpectedDeliveryTime(expectedTimeOfDelivery)
                             .withState(OrderState.ACCEPTED)
                             .build());
                 } else if (select == NO_OPTION) {
-                    orderClient.updateOrder(token, mapMessage.getLong("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
+                    orderClient.updateOrder(token, textMessage.getLongProperty("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
                             .withState(OrderState.DECLINED)
                             .build());
                 }
