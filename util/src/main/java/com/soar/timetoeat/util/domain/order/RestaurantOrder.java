@@ -1,6 +1,8 @@
 package com.soar.timetoeat.util.domain.order;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -51,6 +53,15 @@ public class RestaurantOrder implements Serializable {
 
     public Long getExpectedDeliveryTime() {
         return expectedDeliveryTime;
+    }
+
+    public String getHumanizedExpectedDeliveryTime() {
+        if (!Objects.isNull(expectedDeliveryTime)) {
+            final Timestamp timestamp = new Timestamp(expectedDeliveryTime);
+            Date expectedDate = new Date(timestamp.getTime());
+            return expectedDate.toString();
+        }
+        return "";
     }
 
     public double getTotalPrice() {

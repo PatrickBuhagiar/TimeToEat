@@ -4,6 +4,7 @@ import com.soar.timetoeat.client.portal.dao.AuthClient;
 import com.soar.timetoeat.client.portal.dao.OrderClient;
 import com.soar.timetoeat.client.portal.dao.RestaurantClient;
 import com.soar.timetoeat.util.domain.auth.UserRole;
+import com.soar.timetoeat.util.domain.order.OrderState;
 import com.soar.timetoeat.util.domain.order.RestaurantOrder;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
 import com.soar.timetoeat.util.domain.restaurant.RestaurantWithMenu;
@@ -13,6 +14,8 @@ import com.soar.timetoeat.util.params.order.CreateOrderItemParams;
 import com.soar.timetoeat.util.params.order.CreateOrderItemParams.CreateOrderItemParamsBuilder;
 import com.soar.timetoeat.util.params.order.CreateOrderParams;
 import com.soar.timetoeat.util.params.order.CreateOrderParams.CreateOrderParamsBuilder;
+import com.soar.timetoeat.util.params.order.UpdateOrderParams;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,6 +28,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import javax.jms.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -35,6 +39,10 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static javax.swing.JOptionPane.NO_OPTION;
+import static javax.swing.JOptionPane.YES_NO_OPTION;
+import static javax.swing.JOptionPane.YES_OPTION;
+
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = RepositoryRestMvcAutoConfiguration.class)
 @EnableFeignClients
@@ -42,6 +50,7 @@ import java.util.stream.Collectors;
 @EnableDiscoveryClient
 public class ClientPortal extends JPanel implements ActionListener {
 
+    private static JFrame frame;
     private final AuthClient authClient;
     private final RestaurantClient restaurantClient;
     private final OrderClient orderClient;
@@ -79,14 +88,17 @@ public class ClientPortal extends JPanel implements ActionListener {
     //order fields
     private JPanel orderPanel;
     private DefaultTableModel order_dtm;
+    private Session session;
+    private Topic topic;
 
     @Autowired
     public ClientPortal(final AuthClient authClient,
                         final RestaurantClient restaurantClient,
-                        final OrderClient orderClient) {
+                        final OrderClient orderClient) throws JMSException {
         this.authClient = authClient;
         this.restaurantClient = restaurantClient;
         this.orderClient = orderClient;
+        initConnection();
         initWindow();
     }
 
@@ -95,13 +107,35 @@ public class ClientPortal extends JPanel implements ActionListener {
                 .headless(false).run(args);
 
         EventQueue.invokeLater(() -> {
-            JFrame frame = new JFrame("Client Portal");
+            frame = new JFrame("Client Portal");
             ClientPortal ex = ctx.getBean(ClientPortal.class);
             frame.getContentPane().add(ex, BorderLayout.CENTER);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             frame.setSize(frameWidth, frameHeight);
             frame.setVisible(true);
         });
+    }
+
+    private void initConnection() throws JMSException {
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:3000");
+        Connection connection = connectionFactory.createConnection();
+        connection.start();
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    }
+
+    /**
+     * Create a Queue for receiving orders
+     */
+    private void initialiseTopic() {
+        if (Objects.isNull(topic)) {
+            try {
+                topic = session.createTopic("cli-" + login_usernameText.getText());
+                final MessageConsumer consumer = session.createConsumer(topic);
+                consumer.setMessageListener(new MessageListener());
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void initWindow() {
@@ -376,6 +410,7 @@ public class ClientPortal extends JPanel implements ActionListener {
             //store token locally for future http calls
             token = loginResponse.getHeaders().get("Authorization").get(0);
             updateOrderHistory();
+            initialiseTopic();
             updateHomeFields(homePanel);
             //clear fields
             login_usernameText.setText("");
@@ -457,5 +492,20 @@ public class ClientPortal extends JPanel implements ActionListener {
                 .withItems(itemParams)
                 .withDeliveryAddress(restaurant_deliveryAddressText.getText())
                 .build();
+    }
+
+    class MessageListener implements javax.jms.MessageListener {
+
+        @Override
+        public void onMessage(final Message message) {
+            try {
+                TextMessage textMessage = (TextMessage) message;
+                updateOrderHistory();
+                JOptionPane.showMessageDialog(frame, textMessage.getText());
+                tabbedPane.setSelectedIndex(3);
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
