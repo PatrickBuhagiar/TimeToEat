@@ -1,8 +1,8 @@
 package com.soar.timetoeat.restaurant.portal.handler;
 
 import com.google.gson.Gson;
-import com.soar.timetoeat.util.exceptions.ClientException;
-import com.soar.timetoeat.util.exceptions.ExceptionResponse;
+import com.soar.timetoeat.util.faults.ClientException;
+import com.soar.timetoeat.util.faults.ExceptionResponse;
 import feign.Response;
 import org.springframework.http.ResponseEntity;
 

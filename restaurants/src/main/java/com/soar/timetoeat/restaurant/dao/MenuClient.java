@@ -27,5 +27,5 @@ import org.springframework.web.bind.annotation.RequestMethod;
 public interface MenuClient {
 
     @RequestMapping(value = "/restaurants/{restaurantId}/menu", method = RequestMethod.GET, consumes = "application/json")
-    public Menu getMenu(@PathVariable("restaurantId") final Long restaurantId);
+    Menu getMenu(@PathVariable("restaurantId") final Long restaurantId);
 }

@@ -5,6 +5,10 @@ import com.soar.timetoeat.restaurant.dao.RestaurantRepository;
 import com.soar.timetoeat.restaurant.domain.Restaurant;
 import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.domain.restaurant.RestaurantWithMenu;
+import com.soar.timetoeat.util.faults.auth.UnAuthenticatedException;
+import com.soar.timetoeat.util.faults.restaurant.RestaurantAddressNotDefinedException;
+import com.soar.timetoeat.util.faults.restaurant.RestaurantNameNotDefinedException;
+import com.soar.timetoeat.util.faults.restaurant.RestaurantNotFoundException;
 import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.soar.timetoeat.restaurant.utils.Converter.convert;
@@ -44,10 +49,10 @@ public class RestaurantController {
      */
     @RequestMapping(value = "restaurants/{restaurantName}", method = GET)
     public @ResponseBody
-    ResponseEntity<RestaurantWithMenu> getRestaurant(@PathVariable final String restaurantName) {
+    ResponseEntity<RestaurantWithMenu> getRestaurant(@PathVariable final String restaurantName) throws RestaurantNotFoundException {
         final Restaurant restaurant = repository.findByName(restaurantName);
         if (Objects.isNull(restaurant)) {
-            return ResponseEntity.status(NOT_FOUND).body(null);
+            throw new RestaurantNotFoundException(restaurantName);
         }
         final Menu menu = menuClient.getMenu(restaurant.getId());
         return ResponseEntity.status(OK).body(convert(restaurant, menu));
@@ -62,10 +67,21 @@ public class RestaurantController {
      */
     @RequestMapping(value = "restaurants", method = POST)
     public @ResponseBody
-    ResponseEntity<Restaurant> createRestaurant(@RequestBody final CreateRestaurantParams params) {
+    ResponseEntity<Restaurant> createRestaurant(@RequestBody final CreateRestaurantParams params) throws UnAuthenticatedException, RestaurantNameNotDefinedException, RestaurantAddressNotDefinedException {
+        validate(params);
         return getLoggedInUsername()
                 .map(username -> ResponseEntity.status(HttpStatus.CREATED).body(repository.save(convert(params, username))))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null));
+                .orElseThrow(UnAuthenticatedException::new);
+    }
+
+    private void validate(final CreateRestaurantParams params) throws RestaurantNameNotDefinedException, RestaurantAddressNotDefinedException {
+        if (Objects.isNull(params.getName()) || params.getName().isEmpty()) {
+            throw new RestaurantNameNotDefinedException();
+        }
+
+        if (Objects.isNull(params.getAddress()) || params.getAddress().isEmpty()) {
+            throw new RestaurantAddressNotDefinedException();
+        }
     }
 
     /**
@@ -88,9 +104,12 @@ public class RestaurantController {
      */
     @RequestMapping(value = "restaurant", method = GET)
     public @ResponseBody
-    Restaurant getRestaurantByOwner() {
-        return getLoggedInUsername()
-                .map(repository::findByOwner)
-                .orElseGet(() -> null);
+    Restaurant getRestaurantByOwner() throws UnAuthenticatedException {
+        final Optional<String> loggedInUsername = getLoggedInUsername();
+        if (loggedInUsername.isPresent()) {
+                return repository.findByOwner(loggedInUsername.get());
+        } else {
+            throw new UnAuthenticatedException();
+        }
     }
 }

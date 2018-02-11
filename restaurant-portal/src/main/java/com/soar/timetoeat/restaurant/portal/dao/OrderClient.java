@@ -1,7 +1,7 @@
 package com.soar.timetoeat.restaurant.portal.dao;
 
 import com.soar.timetoeat.util.domain.order.RestaurantOrder;
-import com.soar.timetoeat.util.exceptions.ClientException;
+import com.soar.timetoeat.util.faults.ClientException;
 import com.soar.timetoeat.util.params.order.UpdateOrderParams;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.http.ResponseEntity;

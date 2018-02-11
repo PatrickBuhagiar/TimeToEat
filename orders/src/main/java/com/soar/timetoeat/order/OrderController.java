@@ -3,6 +3,12 @@ package com.soar.timetoeat.order;
 import com.soar.timetoeat.order.dao.OrderRepository;
 import com.soar.timetoeat.order.domain.RestaurantOrder;
 import com.soar.timetoeat.util.domain.order.OrderState;
+import com.soar.timetoeat.util.faults.auth.UnAuthenticatedException;
+import com.soar.timetoeat.util.faults.auth.UnAuthorisedException;
+import com.soar.timetoeat.util.faults.order.DeliveryAddressNotDefinedException;
+import com.soar.timetoeat.util.faults.order.EmptyOrderException;
+import com.soar.timetoeat.util.faults.order.InvalidPaymentDetailsException;
+import com.soar.timetoeat.util.faults.order.OrderDoesNotExistException;
 import com.soar.timetoeat.util.params.order.CreateOrderParams;
 import com.soar.timetoeat.util.params.order.UpdateOrderParams;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -14,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.jms.*;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.soar.timetoeat.order.utils.Converter.convert;
@@ -51,7 +58,9 @@ public class OrderController {
     @RequestMapping(value = "restaurants/{restaurantName}/checkout", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<RestaurantOrder> createOrder(@PathVariable("restaurantName") final String restaurantName,
-                                                @RequestBody final CreateOrderParams params) throws JMSException {
+                                                @RequestBody final CreateOrderParams params) throws JMSException, UnAuthenticatedException, DeliveryAddressNotDefinedException, InvalidPaymentDetailsException, EmptyOrderException {
+
+        validateCreateOrderParams(params);
         //We are creating a queue per restaurant. Create a new one if not already created
         if (!queueMap.containsKey(restaurantName)) {
             queueMap.put(restaurantName, session.createQueue("res-" + restaurantName));
@@ -65,7 +74,24 @@ public class OrderController {
 
             return ResponseEntity.status(CREATED).body(createdOrder);
         } else {
-            return ResponseEntity.status(UNAUTHORIZED).body(null);
+            throw new UnAuthenticatedException();
+        }
+    }
+
+    private void validateCreateOrderParams(final CreateOrderParams params) throws DeliveryAddressNotDefinedException, InvalidPaymentDetailsException, EmptyOrderException {
+        if (params.getItems().isEmpty() || Objects.isNull(params.getItems())) {
+            throw new EmptyOrderException("Order cannot be empty");
+        }
+
+        if (Objects.isNull(params.getDeliveryAddress()) || params.getDeliveryAddress().isEmpty()) {
+            throw new DeliveryAddressNotDefinedException("Delivery address is not defined");
+        }
+
+        if (params.getCardNumber().equals(0L)
+                || Objects.isNull(params.getCardNumber())
+                || params.getCvv() == 0
+                || params.getCvv() < 100) {
+            throw new InvalidPaymentDetailsException("Invalid Payment Details");
         }
     }
 
@@ -107,8 +133,13 @@ public class OrderController {
      */
     @RequestMapping(value = "orders/restaurant", method = GET)
     public @ResponseBody
-    Set<RestaurantOrder> getRestaurantOrders() {
-        return repository.findByRestaurantUsername(getLoggedInUsername().get());
+    Set<RestaurantOrder> getRestaurantOrders() throws UnAuthenticatedException {
+        final Optional<String> loggedInUsername = getLoggedInUsername();
+        if (loggedInUsername.isPresent()) {
+            return repository.findByRestaurantUsername(loggedInUsername.get());
+        } else {
+            throw new UnAuthenticatedException();
+        }
     }
 
     /**
@@ -120,8 +151,13 @@ public class OrderController {
      */
     @RequestMapping(value = "orders/client", method = GET)
     public @ResponseBody
-    Set<RestaurantOrder> getClientOrders() {
-        return repository.findByClientUsername(getLoggedInUsername().get());
+    Set<RestaurantOrder> getClientOrders() throws UnAuthenticatedException {
+        final Optional<String> loggedInUsername = getLoggedInUsername();
+        if (loggedInUsername.isPresent()) {
+            return repository.findByClientUsername(loggedInUsername.get());
+        } else {
+            throw new UnAuthenticatedException();
+        }
     }
 
     /**
@@ -136,14 +172,16 @@ public class OrderController {
     @RequestMapping(value = "orders/{orderId}", method = POST)
     public @ResponseBody
     ResponseEntity<RestaurantOrder> updateOrder(@PathVariable("orderId") final Long orderId,
-                                                @RequestBody final UpdateOrderParams params) throws JMSException {
+                                                @RequestBody final UpdateOrderParams params) throws JMSException, OrderDoesNotExistException, UnAuthorisedException, UnAuthenticatedException {
         //search for order
         final RestaurantOrder order = repository.findOne(orderId);
         if (Objects.isNull(order)) {
-            return ResponseEntity.status(NOT_FOUND).body(null);
+            throw new OrderDoesNotExistException(orderId);
         }
         //get logged in user
-        final String loggedInRestaurantUsername = getLoggedInUsername().get();
+        final String loggedInRestaurantUsername = getLoggedInUsername()
+                .orElseThrow(UnAuthenticatedException::new);
+
         //Case when order gets approved for the first time, we set the restaurant username
         if (order.getState().equals(OrderState.AWAIT_APPROVAL) && !params.getState().equals(OrderState.DECLINED)) {
             order.setRestaurantUsername(loggedInRestaurantUsername);
@@ -151,7 +189,7 @@ public class OrderController {
         //AUTHORISATION: The logged in username must match the order's restaurant username
         if (!Objects.isNull(order.getRestaurantUsername())
                 && !order.getRestaurantUsername().equals(loggedInRestaurantUsername)) {
-            return ResponseEntity.status(UNAUTHORIZED).body(null);
+            throw new UnAuthorisedException();
         }
         //set expected delivery time if present in parameters
         if (!Objects.isNull(params.getExpectedDeliveryTime())) {

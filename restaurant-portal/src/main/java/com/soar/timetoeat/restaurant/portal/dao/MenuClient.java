@@ -1,13 +1,12 @@
 package com.soar.timetoeat.restaurant.portal.dao;
 
 import com.soar.timetoeat.util.domain.menu.Menu;
-import com.soar.timetoeat.util.exceptions.ClientException;
+import com.soar.timetoeat.util.faults.ClientException;
 import com.soar.timetoeat.util.params.menu.CreateMenuParams;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 @FeignClient("MENU-SERVICE")

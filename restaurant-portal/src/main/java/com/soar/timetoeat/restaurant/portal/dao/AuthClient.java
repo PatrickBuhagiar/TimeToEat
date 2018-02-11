@@ -1,6 +1,6 @@
 package com.soar.timetoeat.restaurant.portal.dao;
 
-import com.soar.timetoeat.util.exceptions.ClientException;
+import com.soar.timetoeat.util.faults.ClientException;
 import com.soar.timetoeat.util.params.auth.CreateUserParams;
 import com.soar.timetoeat.util.params.auth.LoginRequest;
 import org.springframework.cloud.netflix.feign.FeignClient;

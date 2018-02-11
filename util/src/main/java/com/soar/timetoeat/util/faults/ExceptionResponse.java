@@ -1,6 +1,5 @@
-package com.soar.timetoeat.util.exceptions;
+package com.soar.timetoeat.util.faults;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;

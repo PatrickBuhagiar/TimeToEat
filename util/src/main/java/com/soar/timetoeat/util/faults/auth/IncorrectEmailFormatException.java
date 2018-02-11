@@ -1,4 +1,4 @@
-package com.soar.timetoeat.util.exceptions.auth;
+package com.soar.timetoeat.util.faults.auth;
 
 public class IncorrectEmailFormatException extends Exception {
 

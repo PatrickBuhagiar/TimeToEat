@@ -1,6 +1,5 @@
 package com.soar.timetoeat.restaurant.portal;
 
-import com.google.common.collect.ImmutableList;
 import com.soar.timetoeat.restaurant.portal.dao.AuthClient;
 import com.soar.timetoeat.restaurant.portal.dao.MenuClient;
 import com.soar.timetoeat.restaurant.portal.dao.OrderClient;
@@ -10,8 +9,7 @@ import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.domain.order.OrderState;
 import com.soar.timetoeat.util.domain.order.RestaurantOrder;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
-import com.soar.timetoeat.util.exceptions.ClientException;
-import com.soar.timetoeat.util.params.auth.CreateUserParams;
+import com.soar.timetoeat.util.faults.ClientException;
 import com.soar.timetoeat.util.params.auth.CreateUserParams.CreateUserParamsBuilder;
 import com.soar.timetoeat.util.params.auth.LoginRequest;
 import com.soar.timetoeat.util.params.menu.CreateItemParams;
@@ -19,7 +17,6 @@ import com.soar.timetoeat.util.params.menu.CreateItemParams.CreateItemParamsBuil
 import com.soar.timetoeat.util.params.menu.CreateMenuParams;
 import com.soar.timetoeat.util.params.menu.CreateMenuParams.CreateMenuParamsBuilder;
 import com.soar.timetoeat.util.params.order.UpdateOrderParams.UpdateOrderParamsBuilder;
-import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams;
 import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams.CreateRestaurantParamsBuilder;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -374,6 +371,8 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                         updatedOrderButton.setEnabled(true);
                     }
                 }
+            } else {
+                updatedOrderButton.setEnabled(false);
             }
         });
         orderHistoryTable.setModel(order_dtm);
@@ -549,6 +548,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                     updateMenu(restaurant.getId());
                     initialiseOrderQueue();
                     updateRestaurantFields(restaurantPanel);
+                    JOptionPane.showMessageDialog(frame, "Restaurant created successfully!");
                 }
             } catch (ClientException e) {
                 showErrorDialogue(e);
@@ -566,7 +566,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     }
 
     private void showErrorDialogue(final ClientException e) {
-        JOptionPane.showMessageDialog(frame,e.getExceptionResponse().getDescription());
+        JOptionPane.showMessageDialog(frame, e.getExceptionResponse().getDescription());
     }
 
     private void updateOrderToNextState() {
@@ -654,6 +654,9 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                     .collect(Collectors.toList());
         } catch (ClientException e) {
             showErrorDialogue(e);
+        }
+        if (orderHistory.isEmpty()) {
+            updatedOrderButton.setEnabled(false);
         }
         populateOrderHistoryTableFromOrderHistory();
     }

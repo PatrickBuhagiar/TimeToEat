@@ -1,10 +1,10 @@
-package com.soar.timetoeat.util.exceptions.menu;
+package com.soar.timetoeat.util.faults.menu;
 
-public class MenuNotFound extends Exception {
+public class MenuNotFoundException extends Exception {
 
     private long restaurantId;
 
-    public MenuNotFound(final String message, final long restaurantId) {
+    public MenuNotFoundException(final String message, final long restaurantId) {
         super(message);
         this.restaurantId = restaurantId;
     }
