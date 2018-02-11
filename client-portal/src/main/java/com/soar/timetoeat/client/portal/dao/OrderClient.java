@@ -1,6 +1,7 @@
 package com.soar.timetoeat.client.portal.dao;
 
 import com.soar.timetoeat.util.domain.order.RestaurantOrder;
+import com.soar.timetoeat.util.faults.ClientException;
 import com.soar.timetoeat.util.params.order.CreateOrderParams;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +18,9 @@ public interface OrderClient {
     @ResponseBody
     ResponseEntity<RestaurantOrder> createOrder(@RequestHeader("Authorization") final String token,
                                                 @PathVariable("restaurantName") final String restaurantName,
-                                                @RequestBody final CreateOrderParams params);
+                                                @RequestBody final CreateOrderParams params) throws ClientException;
 
     @RequestMapping(value = "orders/client", method = GET)
     public @ResponseBody
-    Set<RestaurantOrder> getClientOrders(@RequestHeader("Authorization") final String token);
+    Set<RestaurantOrder> getClientOrders(@RequestHeader("Authorization") final String token) throws ClientException;
 }

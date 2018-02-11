@@ -1,4 +1,4 @@
-package com.soar.timetoeat.restaurant.portal;
+package com.soar.timetoeat.restaurant.portal.config;
 
 import com.soar.timetoeat.restaurant.portal.handler.FeignErrorDecoder;
 import feign.codec.ErrorDecoder;

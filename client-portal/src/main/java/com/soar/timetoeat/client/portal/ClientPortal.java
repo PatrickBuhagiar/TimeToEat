@@ -4,17 +4,16 @@ import com.soar.timetoeat.client.portal.dao.AuthClient;
 import com.soar.timetoeat.client.portal.dao.OrderClient;
 import com.soar.timetoeat.client.portal.dao.RestaurantClient;
 import com.soar.timetoeat.util.domain.auth.UserRole;
-import com.soar.timetoeat.util.domain.order.OrderState;
 import com.soar.timetoeat.util.domain.order.RestaurantOrder;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
 import com.soar.timetoeat.util.domain.restaurant.RestaurantWithMenu;
+import com.soar.timetoeat.util.faults.ClientException;
 import com.soar.timetoeat.util.params.auth.CreateUserParams.CreateUserParamsBuilder;
 import com.soar.timetoeat.util.params.auth.LoginRequest;
 import com.soar.timetoeat.util.params.order.CreateOrderItemParams;
 import com.soar.timetoeat.util.params.order.CreateOrderItemParams.CreateOrderItemParamsBuilder;
 import com.soar.timetoeat.util.params.order.CreateOrderParams;
 import com.soar.timetoeat.util.params.order.CreateOrderParams.CreateOrderParamsBuilder;
-import com.soar.timetoeat.util.params.order.UpdateOrderParams;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -40,10 +39,6 @@ import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static javax.swing.JOptionPane.NO_OPTION;
-import static javax.swing.JOptionPane.YES_NO_OPTION;
-import static javax.swing.JOptionPane.YES_OPTION;
 
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = RepositoryRestMvcAutoConfiguration.class)
@@ -301,109 +296,115 @@ public class ClientPortal extends JPanel implements ActionListener {
 
     private void updateSelectedRestaurant(final JPanel panel) {
         if (!Objects.isNull(selectedRestaurantName)) {
-            final ResponseEntity<RestaurantWithMenu> restaurantResponse = restaurantClient.getRestaurant(selectedRestaurantName);
-            if (restaurantResponse.getStatusCode() == HttpStatus.OK) {
-                selectedRestaurant = restaurantResponse.getBody();
+            final ResponseEntity<RestaurantWithMenu> restaurantResponse;
+            try {
+                restaurantResponse = restaurantClient.getRestaurant(selectedRestaurantName);
 
-                if (!selectedAtLeastOneRestaurant) {
-                    //add restaurant details
-                    JLabel detailsLabel = new JLabel("Selected Restaurant");
-                    detailsLabel.setBounds(220, 10, 200, 30);
-                    detailsLabel.setFont(new Font(detailsLabel.getName(), Font.BOLD, 20));
-                    panel.add(detailsLabel);
+                if (restaurantResponse.getStatusCode() == HttpStatus.OK) {
+                    selectedRestaurant = restaurantResponse.getBody();
 
-                    JLabel nameLabel = new JLabel("Name");
-                    nameLabel.setBounds(220, 40, 80, 25);
-                    panel.add(nameLabel);
+                    if (!selectedAtLeastOneRestaurant) {
+                        //add restaurant details
+                        JLabel detailsLabel = new JLabel("Selected Restaurant");
+                        detailsLabel.setBounds(220, 10, 200, 30);
+                        detailsLabel.setFont(new Font(detailsLabel.getName(), Font.BOLD, 20));
+                        panel.add(detailsLabel);
 
-                    restaurant_nameText = new JTextField(30);
-                    restaurant_nameText.setBounds(310, 40, 160, 25);
-                    restaurant_nameText.setEditable(false);
-                    panel.add(restaurant_nameText);
+                        JLabel nameLabel = new JLabel("Name");
+                        nameLabel.setBounds(220, 40, 80, 25);
+                        panel.add(nameLabel);
 
-                    JLabel addressLabel = new JLabel("Address");
-                    addressLabel.setBounds(220, 70, 80, 25);
-                    panel.add(addressLabel);
+                        restaurant_nameText = new JTextField(30);
+                        restaurant_nameText.setBounds(310, 40, 160, 25);
+                        restaurant_nameText.setEditable(false);
+                        panel.add(restaurant_nameText);
 
-                    restaurant_addressText = new JTextField(30);
-                    restaurant_addressText.setBounds(310, 70, 160, 25);
-                    restaurant_addressText.setEditable(false);
-                    panel.add(restaurant_addressText);
+                        JLabel addressLabel = new JLabel("Address");
+                        addressLabel.setBounds(220, 70, 80, 25);
+                        panel.add(addressLabel);
 
-                    JLabel menuDetails = new JLabel("Order Menu");
-                    menuDetails.setBounds(220, 100, 200, 30);
-                    menuDetails.setFont(new Font(menuDetails.getName(), Font.BOLD, 20));
-                    panel.add(menuDetails);
+                        restaurant_addressText = new JTextField(30);
+                        restaurant_addressText.setBounds(310, 70, 160, 25);
+                        restaurant_addressText.setEditable(false);
+                        panel.add(restaurant_addressText);
 
-                    //Add table
-                    String[] columnNames = new String[]{"Name", "Description", "UnitPrice", "Quantity"};
-                    JTable menuTable = new JTable() {
-                        @Override
-                        public boolean isCellEditable(int row, int column) {
-                            return column == 3;
-                        }
-                    };
-                    restaurant_dtm = new DefaultTableModel(0, 0);
-                    restaurant_dtm.setColumnIdentifiers(columnNames);
-                    menuTable.setModel(restaurant_dtm);
-                    final JScrollPane jScrollPane = new JScrollPane(menuTable);
-                    jScrollPane.setVisible(true);
-                    jScrollPane.setBounds(220, 130, 380, 310);
-                    panel.add(jScrollPane);
+                        JLabel menuDetails = new JLabel("Order Menu");
+                        menuDetails.setBounds(220, 100, 200, 30);
+                        menuDetails.setFont(new Font(menuDetails.getName(), Font.BOLD, 20));
+                        panel.add(menuDetails);
 
-                    //create order button
-                    createOrderButton = new JButton("create order");
-                    createOrderButton.setBounds(480, 480, 120, 25);
-                    createOrderButton.addActionListener(this);
-                    panel.add(createOrderButton);
+                        //Add table
+                        String[] columnNames = new String[]{"Name", "Description", "UnitPrice", "Quantity"};
+                        JTable menuTable = new JTable() {
+                            @Override
+                            public boolean isCellEditable(int row, int column) {
+                                return column == 3;
+                            }
+                        };
+                        restaurant_dtm = new DefaultTableModel(0, 0);
+                        restaurant_dtm.setColumnIdentifiers(columnNames);
+                        menuTable.setModel(restaurant_dtm);
+                        final JScrollPane jScrollPane = new JScrollPane(menuTable);
+                        jScrollPane.setVisible(true);
+                        jScrollPane.setBounds(220, 130, 380, 310);
+                        panel.add(jScrollPane);
 
-                    //Add Address field
-                    JLabel deliveryAddressLabel = new JLabel("Delivery Address");
-                    deliveryAddressLabel.setBounds(10, 450, 130, 25);
-                    panel.add(deliveryAddressLabel);
+                        //create order button
+                        createOrderButton = new JButton("create order");
+                        createOrderButton.setBounds(480, 480, 120, 25);
+                        createOrderButton.addActionListener(this);
+                        panel.add(createOrderButton);
 
-                    restaurant_deliveryAddressText = new JTextField(30);
-                    restaurant_deliveryAddressText.setBounds(150, 450, 160, 25);
-                    panel.add(restaurant_deliveryAddressText);
+                        //Add Address field
+                        JLabel deliveryAddressLabel = new JLabel("Delivery Address");
+                        deliveryAddressLabel.setBounds(10, 450, 130, 25);
+                        panel.add(deliveryAddressLabel);
 
-                    //Add Card field
-                    JLabel cardNumberLabel = new JLabel("Card Number");
-                    cardNumberLabel.setBounds(10, 480, 130, 25);
-                    panel.add(cardNumberLabel);
+                        restaurant_deliveryAddressText = new JTextField(30);
+                        restaurant_deliveryAddressText.setBounds(150, 450, 160, 25);
+                        panel.add(restaurant_deliveryAddressText);
 
-                    NumberFormat format = NumberFormat.getInstance();
-                    format.setGroupingUsed(false);
-                    NumberFormatter formatter = new NumberFormatter(format);
-                    formatter.setValueClass(Long.class);
-                    formatter.setAllowsInvalid(false);
-                    formatter.setCommitsOnValidEdit(true);
-                    restaurant_cardNumberText = new JFormattedTextField(formatter);
+                        //Add Card field
+                        JLabel cardNumberLabel = new JLabel("Card Number");
+                        cardNumberLabel.setBounds(10, 480, 130, 25);
+                        panel.add(cardNumberLabel);
 
-                    restaurant_cardNumberText.setBounds(150, 480, 160, 25);
-                    panel.add(restaurant_cardNumberText);
+                        NumberFormat format = NumberFormat.getInstance();
+                        format.setGroupingUsed(false);
+                        NumberFormatter formatter = new NumberFormatter(format);
+                        formatter.setValueClass(Long.class);
+                        formatter.setAllowsInvalid(false);
+                        formatter.setCommitsOnValidEdit(true);
+                        restaurant_cardNumberText = new JFormattedTextField(formatter);
 
-                    //Add CVV field
-                    JLabel cvvLabel = new JLabel("CVV");
-                    cvvLabel.setBounds(320, 480, 30, 25);
-                    panel.add(cvvLabel);
+                        restaurant_cardNumberText.setBounds(150, 480, 160, 25);
+                        panel.add(restaurant_cardNumberText);
 
-                    NumberFormat format2 = NumberFormat.getInstance();
-                    format2.setGroupingUsed(false);
-                    NumberFormatter formatter2 = new NumberFormatter(format2);
-                    formatter2.setValueClass(Integer.class);
-                    formatter2.setMaximum(999);
-                    formatter2.setAllowsInvalid(false);
-                    formatter2.setCommitsOnValidEdit(true);
-                    restaurant_cvvText = new JFormattedTextField(formatter2);
-                    restaurant_cvvText.setBounds(360, 480, 50, 25);
-                    panel.add(restaurant_cvvText);
+                        //Add CVV field
+                        JLabel cvvLabel = new JLabel("CVV");
+                        cvvLabel.setBounds(320, 480, 30, 25);
+                        panel.add(cvvLabel);
 
-                    panel.revalidate();
-                    panel.repaint();
+                        NumberFormat format2 = NumberFormat.getInstance();
+                        format2.setGroupingUsed(false);
+                        NumberFormatter formatter2 = new NumberFormatter(format2);
+                        formatter2.setValueClass(Integer.class);
+                        formatter2.setMaximum(999);
+                        formatter2.setAllowsInvalid(false);
+                        formatter2.setCommitsOnValidEdit(true);
+                        restaurant_cvvText = new JFormattedTextField(formatter2);
+                        restaurant_cvvText.setBounds(360, 480, 50, 25);
+                        panel.add(restaurant_cvvText);
+
+                        panel.revalidate();
+                        panel.repaint();
+                    }
+                    populateMenuTableFromCurrentMenu();
+                    restaurant_nameText.setText(selectedRestaurant.getName());
+                    restaurant_addressText.setText(selectedRestaurant.getAddress());
                 }
-                populateMenuTableFromCurrentMenu();
-                restaurant_nameText.setText(selectedRestaurant.getName());
-                restaurant_addressText.setText(selectedRestaurant.getAddress());
+            } catch (ClientException e) {
+                showErrorDialogue(e);
             }
         }
     }
@@ -450,27 +451,30 @@ public class ClientPortal extends JPanel implements ActionListener {
      * Perform a login
      */
     private void login() {
-        final ResponseEntity<Void> loginResponse = authClient.login(new LoginRequest(login_usernameText.getText(), new String(login_passwordText.getPassword())));
-        if (loginResponse.getStatusCode() == HttpStatus.OK) {
-            //store token locally for future http calls
-            token = loginResponse.getHeaders().get("Authorization").get(0);
-            updateOrderHistory();
-            initialiseTopic();
-            updateHomeFields(homePanel);
-            //clear fields
-            login_usernameText.setText("");
-            login_passwordText.setText("");
+        final ResponseEntity<Void> loginResponse;
+        try {
+            loginResponse = authClient.login(new LoginRequest(login_usernameText.getText(), new String(login_passwordText.getPassword())));
+            if (loginResponse.getStatusCode() == HttpStatus.OK) {
+                //store token locally for future http calls
+                token = loginResponse.getHeaders().get("Authorization").get(0);
+                updateOrderHistory();
+                initialiseTopic();
+                updateHomeFields(homePanel);
+                //clear fields
+                login_usernameText.setText("");
+                login_passwordText.setText("");
 
-            //change tab states
-            tabbedPane.setEnabledAt(0, false);
-            tabbedPane.setEnabledAt(1, false);
-            tabbedPane.setEnabledAt(2, true);
-            tabbedPane.setEnabledAt(3, true);
+                //change tab states
+                tabbedPane.setEnabledAt(0, false);
+                tabbedPane.setEnabledAt(1, false);
+                tabbedPane.setEnabledAt(2, true);
+                tabbedPane.setEnabledAt(3, true);
 
-            //switch to home tab
-            tabbedPane.setSelectedIndex(2);
-        } else {
-            JOptionPane.showMessageDialog(null, "Wrong Username and Password");
+                //switch to home tab
+                tabbedPane.setSelectedIndex(2);
+            }
+        } catch (ClientException e) {
+            showErrorDialogue(e);
         }
     }
 
@@ -478,23 +482,27 @@ public class ClientPortal extends JPanel implements ActionListener {
      * Perform a register user
      */
     private void register() {
-        final ResponseEntity<Void> newUser = authClient.register(CreateUserParamsBuilder.aCreateUserParams()
-                .withEmail(register_emailText.getText())
-                .withPassword(new String(register_passwordText.getPassword()))
-                .withUsername(register_usernameText.getText())
-                .withFullName(register_fullNameText.getText())
-                .withRole(UserRole.CLIENT)
-                .build());
-        if (newUser.getStatusCode() == HttpStatus.OK) {
-            //clear fields
-            register_emailText.setText("");
-            register_passwordText.setText("");
-            register_usernameText.setText("");
+        final ResponseEntity<Void> newUser;
+        try {
+            newUser = authClient.register(CreateUserParamsBuilder.aCreateUserParams()
+                    .withEmail(register_emailText.getText())
+                    .withPassword(new String(register_passwordText.getPassword()))
+                    .withUsername(register_usernameText.getText())
+                    .withFullName(register_fullNameText.getText())
+                    .withRole(UserRole.CLIENT)
+                    .build());
 
-            //navigate to login
-            tabbedPane.setSelectedIndex(0);
-        } else {
-            JOptionPane.showMessageDialog(null, "Oops, Something went wrong!");
+            if (newUser.getStatusCode() == HttpStatus.OK) {
+                //clear fields
+                register_emailText.setText("");
+                register_passwordText.setText("");
+                register_usernameText.setText("");
+
+                //navigate to login
+                tabbedPane.setSelectedIndex(0);
+            }
+        } catch (ClientException e) {
+            showErrorDialogue(e);
         }
     }
 
@@ -503,16 +511,25 @@ public class ClientPortal extends JPanel implements ActionListener {
      */
     private void createOrder() {
         final CreateOrderParams createOrderParams = extractOrderParamsFromTable();
-        final ResponseEntity<RestaurantOrder> orderResponse = orderClient.createOrder(token, selectedRestaurant.getName(), createOrderParams);
-        if (orderResponse.getStatusCode() == HttpStatus.CREATED) {
-            currentOrder = orderResponse.getBody();
-            updateOrderHistory();
-            tabbedPane.setSelectedIndex(3);
+        final ResponseEntity<RestaurantOrder> orderResponse;
+        try {
+            orderResponse = orderClient.createOrder(token, selectedRestaurant.getName(), createOrderParams);
+            if (orderResponse.getStatusCode() == HttpStatus.CREATED) {
+                currentOrder = orderResponse.getBody();
+                updateOrderHistory();
+                tabbedPane.setSelectedIndex(3);
+            }
+        } catch (ClientException e) {
+            showErrorDialogue(e);
         }
     }
 
     private void updateOrderHistory() {
-        orderHistory = orderClient.getClientOrders(token).stream().sorted(Comparator.comparingLong(RestaurantOrder::getId).reversed()).collect(Collectors.toList());
+        try {
+            orderHistory = orderClient.getClientOrders(token).stream().sorted(Comparator.comparingLong(RestaurantOrder::getId).reversed()).collect(Collectors.toList());
+        } catch (ClientException e) {
+            showErrorDialogue(e);
+        }
         populateOrderHistoryTableFromOrderHistory();
     }
 
@@ -533,13 +550,18 @@ public class ClientPortal extends JPanel implements ActionListener {
                 itemParams.add(params);
             }
         }
-
+        final String cardNumber = restaurant_cardNumberText.getText();
+        final String cvv = restaurant_cvvText.getText();
         return CreateOrderParamsBuilder.aCreateOrderParams()
                 .withItems(itemParams)
-                .withCardNumber(Long.valueOf(restaurant_cardNumberText.getText()))
-                .withCvv(Integer.valueOf(restaurant_cvvText.getText()))
+                .withCardNumber(cardNumber.isEmpty() ? 0L : Long.valueOf(cardNumber))
+                .withCvv(cvv.isEmpty() ? 0 : Integer.valueOf(cvv))
                 .withDeliveryAddress(restaurant_deliveryAddressText.getText())
                 .build();
+    }
+
+    private void showErrorDialogue(final ClientException e) {
+        JOptionPane.showMessageDialog(frame, e.getExceptionResponse().getDescription());
     }
 
     class MessageListener implements javax.jms.MessageListener {

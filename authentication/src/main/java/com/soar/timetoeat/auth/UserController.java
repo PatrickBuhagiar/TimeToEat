@@ -1,6 +1,7 @@
 package com.soar.timetoeat.auth;
 
 import com.soar.timetoeat.auth.dao.ApplicationUserRepository;
+import com.soar.timetoeat.util.faults.auth.EmailNotUniqueException;
 import com.soar.timetoeat.util.faults.auth.IncorrectEmailFormatException;
 import com.soar.timetoeat.util.faults.auth.PasswordTooSimpleException;
 import com.soar.timetoeat.util.faults.auth.UsernameNotUniqueException;
@@ -39,7 +40,7 @@ public class UserController {
      */
     @RequestMapping(name = "users/register", method = POST)
     public @ResponseBody
-    User registerUser(@RequestBody final CreateUserParams params) throws PasswordTooSimpleException, IncorrectEmailFormatException, UsernameNotUniqueException {
+    User registerUser(@RequestBody final CreateUserParams params) throws PasswordTooSimpleException, IncorrectEmailFormatException, UsernameNotUniqueException, EmailNotUniqueException {
 
         validateRegisterParams(params);
         final User newUser = User.UserBuilder.aUser()
@@ -52,12 +53,16 @@ public class UserController {
         return applicationUserRepository.save(newUser);
     }
 
-    private void validateRegisterParams(final CreateUserParams params) throws IncorrectEmailFormatException, PasswordTooSimpleException, UsernameNotUniqueException {
+    private void validateRegisterParams(final CreateUserParams params) throws IncorrectEmailFormatException, PasswordTooSimpleException, UsernameNotUniqueException, EmailNotUniqueException {
         Pattern emailPattern = Pattern.compile("\\b[a-z0-9._%-]+@[a-z0-9.-]+\\.[a-z]{2,4}\\b");
         Pattern passwordPattern = Pattern.compile("((?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{6,20})");
 
         if (!emailPattern.matcher(params.getEmail()).matches()) {
             throw new IncorrectEmailFormatException("Not a valid Email");
+        }
+
+        if (!Objects.isNull(applicationUserRepository.findByEmail(params.getEmail()))) {
+            throw new EmailNotUniqueException("Email already exists", params.getEmail());
         }
 
         if (!passwordPattern.matcher(params.getPassword()).matches()) {

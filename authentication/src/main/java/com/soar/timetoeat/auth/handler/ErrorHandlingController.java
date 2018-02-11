@@ -22,7 +22,6 @@ public class ErrorHandlingController {
                 HttpStatus.BAD_REQUEST);
     }
 
-
     @ExceptionHandler(UsernameNotUniqueException.class)
     public ResponseEntity<ExceptionResponse> handle(UsernameNotUniqueException e) {
         return new ResponseEntity<>(new ExceptionResponse(e.getMessage(), e.getUsername()),
