@@ -33,10 +33,10 @@
     <modules>
 		<module>eureka</module>
         <module>util</module>
-        <module>menu</module>
-        <module>restaurant</module>
-        <module>order</module>
-        <module>auth</module>
+        <module>menus</module>
+        <module>restaurants</module>
+        <module>orders</module>
+        <module>authentication</module>
         <module>restaurant-portal</module>
         <module>client-portal</module>
         <module>broker-service</module>
