@@ -1,6 +1,9 @@
 package com.soar.timetoeat.auth;
 
 import com.soar.timetoeat.auth.dao.ApplicationUserRepository;
+import com.soar.timetoeat.util.exceptions.auth.IncorrectEmailFormatException;
+import com.soar.timetoeat.util.exceptions.auth.PasswordTooSimpleException;
+import com.soar.timetoeat.util.exceptions.auth.UsernameAlreadyExistsException;
 import com.soar.timetoeat.util.params.auth.CreateUserParams;
 import com.soar.timetoeat.auth.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Objects;
+import java.util.regex.Pattern;
 
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
@@ -27,12 +33,15 @@ public class UserController {
 
     /**
      * Register a new User.
+     *
      * @param params the user creation parameters
      * @return the created user
      */
     @RequestMapping(name = "users/register", method = POST)
     public @ResponseBody
-    User registerUser(@RequestBody final CreateUserParams params) {
+    User registerUser(@RequestBody final CreateUserParams params) throws PasswordTooSimpleException, IncorrectEmailFormatException, UsernameAlreadyExistsException {
+
+        validateRegisterParams(params);
         final User newUser = User.UserBuilder.aUser()
                 .withRole(params.getRole())
                 .withEmail(params.getEmail())
@@ -41,5 +50,23 @@ public class UserController {
                 .withPassword(bCryptPasswordEncoder.encode(params.getPassword()))
                 .build();
         return applicationUserRepository.save(newUser);
+    }
+
+    private void validateRegisterParams(final CreateUserParams params) throws IncorrectEmailFormatException, PasswordTooSimpleException, UsernameAlreadyExistsException {
+        Pattern emailPattern = Pattern.compile("\\b[a-z0-9._%-]+@[a-z0-9.-]+\\.[a-z]{2,4}\\b");
+        Pattern passwordPattern = Pattern.compile("((?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{6,20})");
+
+        if (!emailPattern.matcher(params.getEmail()).matches()) {
+            throw new IncorrectEmailFormatException("Not a valid Email");
+        }
+
+        if (!passwordPattern.matcher(params.getPassword()).matches()) {
+            throw new PasswordTooSimpleException("Password must contain at least 1 small letter, \n1 capital letter, 1 number and at least 6 to 20 characters long");
+        }
+
+        if (!Objects.isNull(applicationUserRepository.findByUsername(params.getUsername()))) {
+            throw new UsernameAlreadyExistsException("Username already exists", params.getUsername());
+        }
+
     }
 }

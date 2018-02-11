@@ -2,8 +2,10 @@ package com.soar.timetoeat.menu;
 
 import com.soar.timetoeat.menu.dao.MenuRepository;
 import com.soar.timetoeat.menu.domain.Menu;
+import com.soar.timetoeat.util.exceptions.menu.MenuNotFound;
 import com.soar.timetoeat.util.params.menu.CreateMenuParams;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.RequestEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
@@ -31,15 +33,20 @@ public class MenuController {
      */
     @RequestMapping(value = "restaurants/{restaurantId}/menu", method = GET)
     public @ResponseBody
-    Menu getMenu(@PathVariable("restaurantId") final Long restaurantId) {
-        return repository.findByRestaurantId(restaurantId);
+    Menu getMenu(@PathVariable("restaurantId") final Long restaurantId) throws MenuNotFound {
+
+        final Menu fetchedMenu = repository.findByRestaurantId(restaurantId);
+        if (Objects.isNull(fetchedMenu)) {
+            throw new MenuNotFound("Menu not found for restaurant", restaurantId);
+        }
+        return fetchedMenu;
     }
 
     /**
      * Endpoint for creating a {@link Menu} for a given restaurant
      *
      * @param restaurantId the restaurant's ID
-     * @param params the creation parameters
+     * @param params       the creation parameters
      * @return the created {@link Menu}
      */
     @RequestMapping(value = "restaurants/{restaurantId}/menu", method = PUT)

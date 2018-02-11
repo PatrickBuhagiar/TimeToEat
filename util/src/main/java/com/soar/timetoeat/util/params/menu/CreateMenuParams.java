@@ -50,9 +50,7 @@ public class CreateMenuParams {
         }
 
         public CreateMenuParams build() {
-            CreateMenuParams createMenuParams = new CreateMenuParams();
-            createMenuParams.items = this.items;
-            return createMenuParams;
+            return new CreateMenuParams(this);
         }
     }
 }

@@ -22,10 +22,6 @@ ribbon:
   maxAutoRetries: 1
   eager-load:
     enabled: true
-hystrix:
-  command:
-    default:
-      execution:
-        isolation:
-          thread:
-            timeoutInMilliseconds: 60000
+feign:
+  hystrix:
+    enabled: false

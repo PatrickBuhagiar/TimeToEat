@@ -5,11 +5,12 @@ import com.soar.timetoeat.restaurant.portal.dao.MenuClient;
 import com.soar.timetoeat.restaurant.portal.dao.OrderClient;
 import com.soar.timetoeat.restaurant.portal.dao.RestaurantClient;
 import com.soar.timetoeat.util.domain.auth.UserRole;
-import com.soar.timetoeat.util.domain.menu.Item;
 import com.soar.timetoeat.util.domain.menu.Menu;
 import com.soar.timetoeat.util.domain.order.OrderState;
 import com.soar.timetoeat.util.domain.order.RestaurantOrder;
 import com.soar.timetoeat.util.domain.restaurant.Restaurant;
+import com.soar.timetoeat.util.exceptions.ClientException;
+import com.soar.timetoeat.util.params.auth.CreateUserParams;
 import com.soar.timetoeat.util.params.auth.CreateUserParams.CreateUserParamsBuilder;
 import com.soar.timetoeat.util.params.auth.LoginRequest;
 import com.soar.timetoeat.util.params.menu.CreateItemParams;
@@ -443,7 +444,13 @@ public class RestaurantPortal extends JPanel implements ActionListener {
      * Perform a login
      */
     private void login() {
-        final ResponseEntity<Void> loginResponse = authClient.login(new LoginRequest(login_usernameText.getText(), new String(login_passwordText.getPassword())));
+        final ResponseEntity<Void> loginResponse;
+        try {
+            loginResponse = authClient.login(new LoginRequest(login_usernameText.getText(), new String(login_passwordText.getPassword())));
+        } catch (ClientException e) {
+            JOptionPane.showMessageDialog(frame, e.getExceptionResponse().getDescription());
+            return;
+        }
         if (loginResponse.getStatusCode() == HttpStatus.OK) {
             //store token locally for future http calls
             token = loginResponse.getHeaders().get("Authorization").get(0);
@@ -492,13 +499,19 @@ public class RestaurantPortal extends JPanel implements ActionListener {
      * Perform a register user
      */
     private void register() {
-        final ResponseEntity<Void> newUser = authClient.register(CreateUserParamsBuilder.aCreateUserParams()
-                .withEmail(register_emailText.getText())
-                .withPassword(new String(register_passwordText.getPassword()))
-                .withUsername(register_usernameText.getText())
-                .withFullName(register_fullNameText.getText())
-                .withRole(UserRole.RESTAURANT)
-                .build());
+        final ResponseEntity<Void> newUser;
+        try {
+            newUser = authClient.register(CreateUserParamsBuilder.aCreateUserParams()
+                    .withEmail(register_emailText.getText())
+                    .withPassword(new String(register_passwordText.getPassword()))
+                    .withUsername(register_usernameText.getText())
+                    .withFullName(register_fullNameText.getText())
+                    .withRole(UserRole.RESTAURANT)
+                    .build());
+        } catch (ClientException e) {
+            JOptionPane.showMessageDialog(frame, e.getExceptionResponse().getDescription());
+            return;
+        }
         if (newUser.getStatusCode() == HttpStatus.OK) {
             //clear fields
             register_emailText.setText("");

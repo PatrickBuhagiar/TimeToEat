@@ -1,5 +1,6 @@
 package com.soar.timetoeat.restaurant.portal.dao;
 
+import com.soar.timetoeat.util.exceptions.ClientException;
 import com.soar.timetoeat.util.params.auth.CreateUserParams;
 import com.soar.timetoeat.util.params.auth.LoginRequest;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -13,8 +14,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 public interface AuthClient {
 
     @RequestMapping(value = "login", method = POST)
-    ResponseEntity<Void> login(@RequestBody final LoginRequest loginRequest);
+    ResponseEntity<Void> login(@RequestBody final LoginRequest loginRequest) throws ClientException;
 
     @RequestMapping(value = "users/register", method = POST)
-    ResponseEntity<Void> register(@RequestBody final CreateUserParams loginRequest);
+    ResponseEntity<Void> register(@RequestBody final CreateUserParams loginRequest) throws ClientException;
 }

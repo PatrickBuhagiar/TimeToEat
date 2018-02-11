@@ -9,7 +9,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootApplication
 @EnableEurekaClient
-@EnableDiscoveryClient
 public class AuthApplication {
 
     public static void main(String[] args) {
