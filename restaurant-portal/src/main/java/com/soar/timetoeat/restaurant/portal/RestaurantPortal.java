@@ -1,5 +1,6 @@
 package com.soar.timetoeat.restaurant.portal;
 
+import com.google.common.collect.ImmutableList;
 import com.soar.timetoeat.restaurant.portal.dao.AuthClient;
 import com.soar.timetoeat.restaurant.portal.dao.MenuClient;
 import com.soar.timetoeat.restaurant.portal.dao.OrderClient;
@@ -18,6 +19,7 @@ import com.soar.timetoeat.util.params.menu.CreateItemParams.CreateItemParamsBuil
 import com.soar.timetoeat.util.params.menu.CreateMenuParams;
 import com.soar.timetoeat.util.params.menu.CreateMenuParams.CreateMenuParamsBuilder;
 import com.soar.timetoeat.util.params.order.UpdateOrderParams.UpdateOrderParamsBuilder;
+import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams;
 import com.soar.timetoeat.util.params.restaurant.CreateRestaurantParams.CreateRestaurantParamsBuilder;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -448,18 +450,22 @@ public class RestaurantPortal extends JPanel implements ActionListener {
         try {
             loginResponse = authClient.login(new LoginRequest(login_usernameText.getText(), new String(login_passwordText.getPassword())));
         } catch (ClientException e) {
-            JOptionPane.showMessageDialog(frame, e.getExceptionResponse().getDescription());
+            showErrorDialogue(e);
             return;
         }
         if (loginResponse.getStatusCode() == HttpStatus.OK) {
             //store token locally for future http calls
             token = loginResponse.getHeaders().get("Authorization").get(0);
             //get Restaurant
-            currentRestaurant = restaurantClient.getRestaurantByOwner(token);
-            if (!Objects.isNull(currentRestaurant)) {
-                currentMenu = menuClient.getMenu(currentRestaurant.getId());
-                updateOrderHistory();
-                initialiseOrderQueue();
+            try {
+                currentRestaurant = restaurantClient.getRestaurantByOwner(token);
+                if (!Objects.isNull(currentRestaurant)) {
+                    currentMenu = menuClient.getMenu(currentRestaurant.getId());
+                    updateOrderHistory();
+                    initialiseOrderQueue();
+                }
+            } catch (ClientException e) {
+                //do nothing. it's ok we we don't have a restaurant/menu yet
             }
             updateRestaurantFields(restaurantPanel);
 
@@ -509,7 +515,7 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                     .withRole(UserRole.RESTAURANT)
                     .build());
         } catch (ClientException e) {
-            JOptionPane.showMessageDialog(frame, e.getExceptionResponse().getDescription());
+            showErrorDialogue(e);
             return;
         }
         if (newUser.getStatusCode() == HttpStatus.OK) {
@@ -530,26 +536,37 @@ public class RestaurantPortal extends JPanel implements ActionListener {
      */
     private void createRestaurantAndMenu() {
         if (Objects.isNull(currentRestaurant)) {
-            final ResponseEntity<Restaurant> restaurantResponse = restaurantClient.createRestaurant(token, CreateRestaurantParamsBuilder.aCreateRestaurantParams()
-                    .withAddress(restaurant_addressText.getText())
-                    .withName(restaurant_nameText.getText())
-                    .build());
+            final ResponseEntity<Restaurant> restaurantResponse;
+            try {
+                restaurantResponse = restaurantClient.createRestaurant(token, CreateRestaurantParamsBuilder.aCreateRestaurantParams()
+                        .withAddress(restaurant_addressText.getText())
+                        .withName(restaurant_nameText.getText())
+                        .build());
+                if (restaurantResponse.getStatusCode() == HttpStatus.CREATED) {
+                    final Restaurant restaurant = restaurantResponse.getBody();
 
-            if (restaurantResponse.getStatusCode() == HttpStatus.CREATED) {
-                final Restaurant restaurant = restaurantResponse.getBody();
-
-                currentRestaurant = restaurant;
-                updateMenu(restaurant.getId());
-                initialiseOrderQueue();
-                updateRestaurantFields(restaurantPanel);
-            } else {
-                JOptionPane.showMessageDialog(frame, "failed to create Restaurant!");
+                    currentRestaurant = restaurant;
+                    updateMenu(restaurant.getId());
+                    initialiseOrderQueue();
+                    updateRestaurantFields(restaurantPanel);
+                }
+            } catch (ClientException e) {
+                showErrorDialogue(e);
             }
+
         }
     }
 
     private void updateMenu(final long restaurantId) {
-        currentMenu = menuClient.createOrUpdateMenu(token, restaurantId, extractMenuParamsFromTable());
+        try {
+            currentMenu = menuClient.createOrUpdateMenu(token, restaurantId, extractMenuParamsFromTable());
+        } catch (ClientException e) {
+            showErrorDialogue(e);
+        }
+    }
+
+    private void showErrorDialogue(final ClientException e) {
+        JOptionPane.showMessageDialog(frame,e.getExceptionResponse().getDescription());
     }
 
     private void updateOrderToNextState() {
@@ -565,11 +582,15 @@ public class RestaurantPortal extends JPanel implements ActionListener {
                 //do nothing
                 return;
             }
-            orderClient.updateOrder(token, selectedOrder.getId(),
-                    UpdateOrderParamsBuilder
-                            .anUpdateOrderParams()
-                            .withState(nextState)
-                            .build());
+            try {
+                orderClient.updateOrder(token, selectedOrder.getId(),
+                        UpdateOrderParamsBuilder
+                                .anUpdateOrderParams()
+                                .withState(nextState)
+                                .build());
+            } catch (ClientException e) {
+                e.printStackTrace();
+            }
             updateOrderHistory();
         }
     }
@@ -627,9 +648,13 @@ public class RestaurantPortal extends JPanel implements ActionListener {
     }
 
     private void updateOrderHistory() {
-        orderHistory = orderClient.getRestaurantOrders(token).stream()
-                .sorted(Comparator.comparingLong(RestaurantOrder::getId).reversed())
-                .collect(Collectors.toList());
+        try {
+            orderHistory = orderClient.getRestaurantOrders(token).stream()
+                    .sorted(Comparator.comparingLong(RestaurantOrder::getId).reversed())
+                    .collect(Collectors.toList());
+        } catch (ClientException e) {
+            showErrorDialogue(e);
+        }
         populateOrderHistoryTableFromOrderHistory();
     }
 
@@ -640,18 +665,23 @@ public class RestaurantPortal extends JPanel implements ActionListener {
             try {
                 TextMessage textMessage = (TextMessage) message;
                 final int select = JOptionPane.showConfirmDialog(frame, textMessage.getText(), "New Order", YES_NO_OPTION);
-                if (select == YES_OPTION) {
-                    Object[] possibilities = {"15", "30", "45", "60", "75", "90"};
-                    final String time = (String) JOptionPane.showInputDialog(frame, "I will deliver in (minutes):", "Delivery time", JOptionPane.PLAIN_MESSAGE, null, possibilities, "15");
-                    final long expectedTimeOfDelivery = System.currentTimeMillis() + (Long.valueOf(time) * ONE_MINUTE_IN_MILLIS);
-                    orderClient.updateOrder(token, textMessage.getLongProperty("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
-                            .withExpectedDeliveryTime(expectedTimeOfDelivery)
-                            .withState(OrderState.ACCEPTED)
-                            .build());
-                } else if (select == NO_OPTION) {
-                    orderClient.updateOrder(token, textMessage.getLongProperty("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
-                            .withState(OrderState.DECLINED)
-                            .build());
+                try {
+
+                    if (select == YES_OPTION) {
+                        Object[] possibilities = {"15", "30", "45", "60", "75", "90"};
+                        final String time = (String) JOptionPane.showInputDialog(frame, "I will deliver in (minutes):", "Delivery time", JOptionPane.PLAIN_MESSAGE, null, possibilities, "15");
+                        final long expectedTimeOfDelivery = System.currentTimeMillis() + (Long.valueOf(time) * ONE_MINUTE_IN_MILLIS);
+                        orderClient.updateOrder(token, textMessage.getLongProperty("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
+                                .withExpectedDeliveryTime(expectedTimeOfDelivery)
+                                .withState(OrderState.ACCEPTED)
+                                .build());
+                    } else if (select == NO_OPTION) {
+                        orderClient.updateOrder(token, textMessage.getLongProperty("id"), UpdateOrderParamsBuilder.anUpdateOrderParams()
+                                .withState(OrderState.DECLINED)
+                                .build());
+                    }
+                } catch (ClientException e) {
+                    showErrorDialogue(e);
                 }
                 updateOrderHistory();
             } catch (JMSException e) {
