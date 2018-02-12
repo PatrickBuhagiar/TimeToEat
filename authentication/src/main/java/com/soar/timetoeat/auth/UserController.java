@@ -1,10 +1,7 @@
 package com.soar.timetoeat.auth;
 
 import com.soar.timetoeat.auth.dao.ApplicationUserRepository;
-import com.soar.timetoeat.util.faults.auth.EmailNotUniqueException;
-import com.soar.timetoeat.util.faults.auth.IncorrectEmailFormatException;
-import com.soar.timetoeat.util.faults.auth.PasswordTooSimpleException;
-import com.soar.timetoeat.util.faults.auth.UsernameNotUniqueException;
+import com.soar.timetoeat.util.faults.auth.*;
 import com.soar.timetoeat.util.params.auth.CreateUserParams;
 import com.soar.timetoeat.auth.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +37,7 @@ public class UserController {
      */
     @RequestMapping(name = "users/register", method = POST)
     public @ResponseBody
-    User registerUser(@RequestBody final CreateUserParams params) throws PasswordTooSimpleException, IncorrectEmailFormatException, UsernameNotUniqueException, EmailNotUniqueException {
+    User registerUser(@RequestBody final CreateUserParams params) throws PasswordTooSimpleException, IncorrectEmailFormatException, UsernameNotUniqueException, EmailNotUniqueException, UsernameNotDefinedException {
 
         validateRegisterParams(params);
         final User newUser = User.UserBuilder.aUser()
@@ -53,9 +50,13 @@ public class UserController {
         return applicationUserRepository.save(newUser);
     }
 
-    private void validateRegisterParams(final CreateUserParams params) throws IncorrectEmailFormatException, PasswordTooSimpleException, UsernameNotUniqueException, EmailNotUniqueException {
+    private void validateRegisterParams(final CreateUserParams params) throws IncorrectEmailFormatException, PasswordTooSimpleException, UsernameNotUniqueException, EmailNotUniqueException, UsernameNotDefinedException {
         Pattern emailPattern = Pattern.compile("\\b[a-z0-9._%-]+@[a-z0-9.-]+\\.[a-z]{2,4}\\b");
         Pattern passwordPattern = Pattern.compile("((?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{6,20})");
+
+        if (params.getUsername().isEmpty()) {
+            throw new UsernameNotDefinedException();
+        }
 
         if (!emailPattern.matcher(params.getEmail()).matches()) {
             throw new IncorrectEmailFormatException("Not a valid Email");

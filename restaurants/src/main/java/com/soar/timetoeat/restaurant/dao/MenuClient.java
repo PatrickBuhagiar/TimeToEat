@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
- * There are two main advantages of using a Feign Client for calling
+ * There are three main advantages of using a Feign Client for calling
  * another service.
  * 1) You have better control over what attributes you receive. For example,
  *    in the {@link Menu} class, we do not need the menu and restaurant IDs

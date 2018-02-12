@@ -18,7 +18,7 @@ public class ErrorHandlingController {
     @ExceptionHandler(RestaurantNameNotUnique.class)
     public ResponseEntity<ExceptionResponse> handle(RestaurantNameNotUnique e) {
         return new ResponseEntity<>(new ExceptionResponse(e.getMessage(), e.getRestaurantName()),
-                HttpStatus.BAD_REQUEST);
+                HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(RestaurantNotFoundException.class)

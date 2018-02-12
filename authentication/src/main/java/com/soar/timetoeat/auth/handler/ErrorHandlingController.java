@@ -19,7 +19,7 @@ public class ErrorHandlingController {
     @ExceptionHandler(EmailNotUniqueException.class)
     public ResponseEntity<ExceptionResponse> handle(EmailNotUniqueException e) {
         return new ResponseEntity<>(new ExceptionResponse(e.getMessage(), e.getEmail()),
-                HttpStatus.BAD_REQUEST);
+                HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(UsernameNotUniqueException.class)
